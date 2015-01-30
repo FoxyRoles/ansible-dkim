@@ -1,0 +1,28 @@
+---
+- name: postfix is installed
+  apt: pkg=postfix state=installed
+  tags: postfix
+
+- name: postfix milter_protocol is configured
+  lineinfile: dest=/etc/postfix/main.cf regexp=^milter_protocol line="milter_protocol = 2"
+  notify:
+   - restart postfix
+
+- name: postfix milter_default_action is configured
+  lineinfile: dest=/etc/postfix/main.cf regexp=^milter_default_action line="milter_default_action = accept"
+  notify:
+   - restart postfix
+
+- name: postfix smtpd_milters is configured
+  lineinfile: dest=/etc/postfix/main.cf regexp=^smtpd_milters line="smtpd_milters = inet:localhost:12301"
+  notify:
+   - restart postfix
+
+- name: postfix non_smtpd_milters is configured
+  lineinfile: dest=/etc/postfix/main.cf regexp=^non_smtpd_milters line="non_smtpd_milters = inet:localhost:12301"
+  notify:
+   - restart postfix
+
+- name: postfix is running
+  service: name=postfix state=running enabled=yes
+  tags: postfix
