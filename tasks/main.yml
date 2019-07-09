@@ -1,3 +1,4 @@
 ---
-- include: opendkim.yml
-- include: postfix.yml
+
+- import_tasks: opendkim.yml
+- import_tasks: postfix.yml

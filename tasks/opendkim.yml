@@ -11,7 +11,6 @@
    - restart opendkim
 
 - name: opendkim directory present
-  file: path=/etc/opendkim state=directory
   file: path=/etc/opendkim/keys state=directory
 
 - name: opendkim TrustedHosts present
@@ -48,4 +47,4 @@
   file: path=/etc/opendkim/keys/{{ dkim_selector }}.private owner=opendkim group=opendkim
 
 - name: opendkim is running
-  service: name=opendkim state=running enabled=yes
+  service: name=opendkim state=started enabled=yes
