@@ -1,9 +1,11 @@
 ---
+
 - name: opendkim packages are installed
-  apt: pkg={{ item }} state=installed
-  with_items:
-   - opendkim
-   - opendkim-tools
+  apt:
+    pkg:
+    - opendkim
+    - opendkim-tools
+    state: present
 
 - name: opendkim socket configured
   lineinfile: dest=/etc/default/opendkim regexp=^SOCKET= line='SOCKET="inet:12301@localhost"'
