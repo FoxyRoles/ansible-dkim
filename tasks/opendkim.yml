@@ -16,40 +16,63 @@
    - restart opendkim
 
 - name: opendkim directory present
-  file: path=/etc/opendkim/keys state=directory
+  file:
+    path: /etc/opendkim/keys
+    state: directory
 
 - name: opendkim TrustedHosts present
-  copy: src=TrustedHosts dest=/etc/opendkim/TrustedHosts
+  copy:
+    src: TrustedHosts
+    dest: /etc/opendkim/TrustedHosts
   notify:
    - restart opendkim
 
 - name: opendkim is configured
-  template: src=opendkim.conf.j2 dest=/etc/opendkim.conf
+  template:
+    src: opendkim.conf.j2
+    dest: /etc/opendkim.conf
   notify:
    - restart opendkim
 
 - name: opendkim KeyTable is configured
-  template: src=KeyTable.j2 dest=/etc/opendkim/KeyTable
+  template:
+    src: KeyTable.j2
+    dest: /etc/opendkim/KeyTable
   notify:
    - restart opendkim
 
 - name: opendkim SigningTable is configured
-  template: src=SigningTable.j2 dest=/etc/opendkim/SigningTable
+  template:
+    src: SigningTable.j2
+    dest: /etc/opendkim/SigningTable
   notify:
    - restart opendkim
 
-- name: ensure signing key is present
-  stat: path=/etc/opendkim/keys/{{ dkim_selector }}.private get_md5=no
-  register: dkim_key
+- name: create directory from keys
+  file:
+    path: /etc/opendkim/keys/{{ item }}
+    state: directory
+  with_items: '{{ dkim_domains }}'
+  when: dkim_create
 
 - name: generate signing key
-  shell: opendkim-genkey -s {{ dkim_selector }} -d {{ dkim_domains[0] }} -D /etc/opendkim/keys
-  when: not dkim_key.stat.exists
+  shell: opendkim-genkey -s {{ dkim_selector }} -d {{ item }} -D /etc/opendkim/keys/{{ item }}
+  with_items: '{{ dkim_domains }}'
+  when: dkim_create
   notify:
    - restart opendkim
 
 - name: ensure signing key owner
-  file: path=/etc/opendkim/keys/{{ dkim_selector }}.private owner=opendkim group=opendkim
+  file:
+    path: /etc/opendkim/keys/{{ item }}/{{ dkim_selector }}.private
+    owner: opendkim
+    group: opendkim
+  with_items: '{{ dkim_domains }}'
 
-- name: opendkim is running
-  service: name=opendkim state=started enabled=yes
+- name: Recursively change ownership of a directory
+  file:
+    path: /etc/opendkim
+    state: directory
+    recurse: yes
+    owner: opendkim
+    group: opendkim

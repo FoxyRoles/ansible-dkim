@@ -1,0 +1,9 @@
+---
+
+dkim_create: true
+dkim_selector: email
+dkim_admin_email: example@domain.com
+dkim_domains:
+  - domain1.com
+  - domain2.com
+  - domain3.com
