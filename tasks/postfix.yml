@@ -7,7 +7,7 @@
   tags: postfix
 
 - name: postfix milter_protocol is configured
-  lineinfile: dest=/etc/postfix/main.cf regexp=^milter_protocol line="milter_protocol = 2"
+  lineinfile: dest=/etc/postfix/main.cf regexp=^milter_protocol line="milter_protocol = 6"
   notify:
    - restart postfix
 

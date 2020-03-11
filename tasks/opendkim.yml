@@ -8,7 +8,10 @@
     state: present
 
 - name: opendkim socket configured
-  lineinfile: dest=/etc/default/opendkim regexp=^SOCKET= line='SOCKET="inet:12301@localhost"'
+  lineinfile:
+    dest: /etc/default/opendkim
+    regexp: '^SOCKET='
+    line: 'SOCKET="inet:12301@localhost"'
   notify:
    - restart opendkim
 
