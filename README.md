@@ -15,3 +15,7 @@ Ansible role for opendkim with postfix configuration on ubuntu
        - domain1.tld
        - domain2.tld
 ```
+
+### License
+
+Licensed under MIT license. See [LICENSE](LICENSE.md) for details.
