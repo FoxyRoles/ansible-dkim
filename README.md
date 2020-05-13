@@ -9,6 +9,7 @@ Ansible role for opendkim with postfix configuration on ubuntu
   sudo: False
   roles:
     - role: sunfoxcz.dkim
+      admin_email: my@mail.tld
       dkim_selector: mail
       dkim_domains:
        - domain1.tld
