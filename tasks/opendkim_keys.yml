@@ -1,0 +1,26 @@
+---
+## Loop to generate keys for each domain
+- name: creates domain's keys directory
+  file: 
+    path: /etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ domain }}
+    state: directory
+
+- name: ensure signing key is present
+  stat: 
+    path: /etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ domain }}/{{ dkim_selector }}.private
+    get_md5: no
+  register: dkim_key
+
+- name: generate signing key
+  shell: opendkim-genkey -s {{ dkim_selector }} -d {{ domain }} -D /etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ domain }}
+  when: not dkim_key.stat.exists
+  notify:
+  - restart opendkim
+
+- name: ensure signing key owner
+  file:
+    path: /etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ domain }}/{{ dkim_selector }}.private
+    owner: opendkim 
+    group: opendkim
+
+...

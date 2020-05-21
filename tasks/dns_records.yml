@@ -1,0 +1,25 @@
+---
+## Show the DNS records to configure with dkim publik key
+
+- name: find files with DNS records with public keys
+  find:
+    path: /etc/opendkim/keys
+    patterns: '{{ dkim_selector }}.txt'
+    recurse: yes
+  register: dkim_txt_files
+
+- name: extract found files content
+  slurp:
+    src: '{{ dkim_txt_file.path }}'
+  loop: '{{ dkim_txt_files.files }}'
+  loop_control:
+    loop_var: dkim_txt_file
+  register: dkim_dns_records
+
+- name: show DNS records in dkim_selector.txt files
+  debug: 
+    msg: 
+    - 'You must add to your DNS the following records:'
+    - "{{ dkim_dns_records.results | json_query ('[*].content') | map('b64decode') | list  }}"
+
+...

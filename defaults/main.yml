@@ -1,0 +1,18 @@
+---
+## Default Variables for ansible-dkim role
+
+
+## The "selector" for opendkim keys and DNS records generation
+dkim_selector: email
+
+## The e-mail address that manages opendkim
+dkim_admin_email: example@domain.tld
+
+## The list of domains you want opendkim to sign mails for
+dkim_domains:
+  - domain1.tld
+  - domain2.tld
+  - domain3.tld
+
+## Whether opendkim uses the same key for all domains or one key per domain
+dkim_same_key: true

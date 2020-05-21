@@ -2,3 +2,4 @@
 
 - import_tasks: opendkim.yml
 - import_tasks: postfix.yml
+- import_tasks: dns_records.yml
