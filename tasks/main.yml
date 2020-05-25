@@ -2,11 +2,11 @@
 ## Tasks for Opendkim Ansible role
 
 - fail:
-    msg: "Bailing out. This role requires 'dkim_admin_email' to have an email address as value"
+    msg: "bailing out, this role requires either 'dkim_admin_email' or `admin_email` to have an email address as value"
   when: dkim_admin_email is not defined
 
 - fail:
-    msg: "Bailing out. This role requires 'dkim_domains' to be defined as a list of domains."
+    msg: "bailing out, this role requires 'dkim_domains' to be defined as a list of domains."
   when: 
   - dkim_domains is not defined
   - dkim_domains is not list
