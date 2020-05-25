@@ -1,12 +1,14 @@
 ---
 ## Default Variables for ansible-dkim role
 
-
 ## The "selector" for opendkim keys and DNS records generation
 dkim_selector: email
 
 ## The e-mail address that manages opendkim
-dkim_admin_email: example@domain.tld
+dkim_admin_email: "{{ admin_email | default ( 'example@domain.tld' ) }}"
+# This variable, in the role's namespace `dkim_` is defined with the value of `admin_email` for backward
+# compatibility of the role, and to eventually harmonise this value accross a whole set of roles. 
+# In your playbooks, you can set either `dkim_admin_email` or `admin_email`
 
 ## The list of domains you want opendkim to sign mails for
 dkim_domains:
