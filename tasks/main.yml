@@ -15,4 +15,9 @@
 
 - import_tasks: postfix.yml
 
-- import_tasks: dns_records.yml
+- include_tasks: dns_records.yml
+  loop: '{{ dkim_domains }}'
+  loop_control:
+    loop_var: dkim_domain
+
+...

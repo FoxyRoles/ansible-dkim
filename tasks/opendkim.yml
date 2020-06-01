@@ -42,7 +42,7 @@
   include_tasks: opendkim_keys.yml 
   loop: '{{ [ dkim_domains[0] ] if dkim_same_key else dkim_domains }}'
   loop_control:
-    loop_var: domain
+    loop_var: dkim_domain
 
 - name: opendkim is running
   service: name=opendkim state=started enabled=yes
