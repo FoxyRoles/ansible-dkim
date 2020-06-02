@@ -1,6 +1,14 @@
 ---
+## DKIM role's handlers
+
 - name: restart opendkim
-  service: name=opendkim state=restarted
+  service: 
+    name: opendkim
+    state: restarted
 
 - name: opendkim - restart postfix
-  service: name=postfix state=restarted
+  service:
+    name: postfix
+    state: restarted
+
+...

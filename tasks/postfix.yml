@@ -1,4 +1,5 @@
 ---
+## Postfix configuration for OpenDKIM messages signing integration
 
 - name: postfix is installed
   apt:
@@ -6,26 +7,22 @@
     state: present
   tags: postfix
 
-- name: postfix milter_protocol is configured
-  lineinfile: dest=/etc/postfix/main.cf regexp=^milter_protocol line="milter_protocol = 6"
-  notify:
-   - opendkim - restart postfix
-
-- name: postfix milter_default_action is configured
-  lineinfile: dest=/etc/postfix/main.cf regexp=^milter_default_action line="milter_default_action = accept"
-  notify:
-   - opendkim - restart postfix
-
-- name: postfix smtpd_milters is configured
-  lineinfile: dest=/etc/postfix/main.cf regexp=^smtpd_milters line="smtpd_milters = inet:localhost:12301"
-  notify:
-   - opendkim - restart postfix
-
-- name: postfix non_smtpd_milters is configured
-  lineinfile: dest=/etc/postfix/main.cf regexp=^non_smtpd_milters line="non_smtpd_milters = inet:localhost:12301"
-  notify:
-   - opendkim - restart postfix
+- name: opendkim configuration as a postfix milter
+  lineinfile:
+    path: '{{ dkim_postfix_config_file }}'
+    regexp: "^{{ dkim_postfix_config_line.parameter }}"
+    line: "{{ dkim_postfix_config_line.parameter }} = {{ dkim_postfix_config_line.value }}"
+    backup: yes
+  loop: "{{ dkim_postfix_config }}"
+  loop_control:
+    loop_var: dkim_postfix_config_line
+  tags: postfix
 
 - name: postfix is running
-  service: name=postfix state=started enabled=yes
+  service: 
+    name: postfix 
+    state: started
+    enabled: yes
   tags: postfix
+
+...

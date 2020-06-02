@@ -1,13 +1,14 @@
 ---
 ## Show the DNS records to configure with dkim publik key
 
-- name: extract found files content
+- name: extract DKIM public key DNS record
   slurp:
     src: "/etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}/{{ dkim_selector }}.txt"
   register: dkim_dns_record
 
-- pause:
-    seconds: 1
+- name: display DKIM public key DNS record
+  pause:
+    seconds: '{{ dkim_dns_record_pause }}'
     prompt: |
       ################################################################################################
       DNS record to add for zone {{ dkim_domain }}:

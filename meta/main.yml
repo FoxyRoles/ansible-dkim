@@ -1,0 +1,26 @@
+---
+galaxy_info:
+  role_name: dkim
+  author: Tomáš Jacík
+  company: sunfoxcz
+  description: Configure OpenDKIM with Postfix
+  min_ansible_version: 2.4
+  license: MIT
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+    - xenial
+    - bionic
+  - name: Debian
+    versions:
+    - jessie
+    - stretch
+    - buster
+  galaxy_tags:
+    - mail
+    - DKIM
+    - antispam
+    - postfix
+    - opendkim
+dependencies: []
