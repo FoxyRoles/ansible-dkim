@@ -4,19 +4,21 @@ Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](
 
 ## Description
 
-This role confiures DKIM mail singing service in a hosts that works as e.ail MTA. 
+This role confiures DKIM mail singing service in a hosts that works as an e-mail MTA. 
 
 The role: 
 * installs and configures opendkim,
 * creates private and public dkim keys for the domains it has to sign, declared in the `dkim_domains` variable,
-* installs postfix and configures it to pass all the messages of the configured domains to be signed by OpenDKIM,
+* installs postfix and configures it to pass all the messages of the configured domains to be signed by opendkim,
 * shows the DNS records with the public keys that must be defined in the public DNS of the domains we sign.
 
 ## Requirements
 
-The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requiesting to sign. At the end, the role will give you the DNS records with the public keys of the domain that you will have to publish in the global DNS system.  
+The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requiesting to sign. At the end, the role will give you the DNS records with the public keys of the domains that you will have to publish in the global DNS system.  
 
 ## Role variable
+
+See also comments and default values in role's file `default/main.yml`.
 
 ### Opendkim package parameters
 

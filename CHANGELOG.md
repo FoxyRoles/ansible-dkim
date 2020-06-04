@@ -9,4 +9,4 @@
 
 * first released version
 * configuration of opendkim to sign mails for a list of domains as a milter of postfix
-* uso of the same key for all domains
+* use of the same key for all domains
