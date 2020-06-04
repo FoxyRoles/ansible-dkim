@@ -1,10 +1,10 @@
 # ansible-dkim
 
-Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](http://opendkim.org/). Works on [Debian](https://debian.org) distributions and derived like [Ubuntu](https://ubuntu.com/).
+Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](http://opendkim.org/), an implementation for Linux of [DKIM mail signing](http://dkim.org/). Works on [Debian](https://debian.org) distributions and derived like [Ubuntu](https://ubuntu.com/).
 
 ## Description
 
-This role confiures DKIM mail singing service in a hosts that works as an e-mail MTA. 
+This role configures DKIM mail signing service in a hosts that works as a Mail Transport Agent (MTA). 
 
 The role: 
 * installs and configures opendkim,
@@ -14,18 +14,18 @@ The role:
 
 ## Requirements
 
-The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requiesting to sign. At the end, the role will give you the DNS records with the public keys of the domains that you will have to publish in the global DNS system.  
+The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requesting to sign. At the end, the role will give you the DNS records with the public keys of the domains that you will have to publish in the global DNS system.
 
 ## Role variable
 
-See also comments and default values in role's file `default/main.yml`.
+See also comments and default values in role's file [`default/main.yml`](default/main.yml).
 
 ### Opendkim package parameters
 
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
-| `dkim_default_config_file:` | /etc/default/opendkim | Opendkim Default values configuration file |
-| `dkim_opendkim_config:` | /etc/opendkim | Opendkim configuration folder |
+| `dkim_default_config_file:` | /etc/default/opendkim | Opendkim default values configuration file |
+| `dkim_opendkim_config_dir:` | /etc/opendkim | Opendkim configuration directory |
 | `dkim_user:` | opendkim | linux user that runs Opendkim | 
 | `dkim_group:` | opendkim | linux group that runs Opendkim | 
 
@@ -33,18 +33,18 @@ See also comments and default values in role's file `default/main.yml`.
 
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
-| `dkim_selector:` | email | Opendkim registers' selector |
-| `dkim_admin_email:` | none | e-mail address that manages opendkim. You musrt define either `dkim_admin_email` or legacy `admin_email`. |
-| `dkim_domains:` | none | List of domains that opendkim must be configured to sign the mails of. A yaml list of DNS. |
-| `dkim_same_key:` | true | Whether opendkim must use the same keys for all domains or a set of keys for each domain.  |
-| `dkim_dns_record_pause:` | 0 | The time (seconds) the role will pause to show the DNS records with the public keys that must be configured.  |
+| `dkim_selector:` | email | Opendkim DNS registers' selector. It can be modified if several DKIM DNS records have to be defined for the same domain.  |
+| `dkim_admin_email:` | none | e-mail address that manages Opendkim. You must define either `dkim_admin_email` or legacy `admin_email`. |
+| `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
+| `dkim_same_key:` | true | Whether Opendkim must generate and use the same key for all domains or one specific key for each domain.  |
+| `dkim_dns_record_pause:` | 0 | The time (in seconds) the role will pause to show the DNS records with the public keys that must be configured.  |
 
 ### Postfix configuration variables 
 
   Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
-| `dkim_postfix_config_file:` | /etc/postfix/main.cf | Postfix main configuration file. |
-| `dkim_postfix_config:` | see `vars/main.yml` | list of parameters to be defined in postfix configuration. Default configuration ensures opendkim is set up as a milter of post fix to sign mails. You can define additional postfix parameters using a list union. |
+| `dkim_postfix_config_file:` | /etc/postfix/main.cf | Postfix main configuration file |
+| `dkim_postfix_config:` | see [`vars/main.yml`](vars/main.yml) | List of parameters to be defined in Postfix configuration. Default configuration ensures opendkim is set up as a milter of Postfix to sign mails. You can define additional Postfix parameters using a list union. |
 
 ## Example playbook
 ```yaml

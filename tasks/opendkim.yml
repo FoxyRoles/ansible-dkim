@@ -18,13 +18,13 @@
 
 - name: opendkim directory present
   file: 
-    path: '{{ dkim_opendkim_config }}/keys' 
+    path: '{{ dkim_opendkim_config_dir }}/keys' 
     state: directory
 
 - name: opendkim TrustedHosts present
   copy: 
     src: TrustedHosts
-    dest: '{{ dkim_opendkim_config }}/TrustedHosts'
+    dest: '{{ dkim_opendkim_config_dir }}/TrustedHosts'
   notify:
    - restart opendkim
 
@@ -38,14 +38,14 @@
 - name: opendkim KeyTable is configured
   template:
     src: KeyTable.j2
-    dest: '{{ dkim_opendkim_config }}/KeyTable'
+    dest: '{{ dkim_opendkim_config_dir }}/KeyTable'
   notify:
    - restart opendkim
 
 - name: opendkim SigningTable is configured
   template:
     src: SigningTable.j2
-    dest: '{{ dkim_opendkim_config }}/SigningTable'
+    dest: '{{ dkim_opendkim_config_dir }}/SigningTable'
   notify:
    - restart opendkim
 

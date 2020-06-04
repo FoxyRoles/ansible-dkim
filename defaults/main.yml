@@ -5,7 +5,7 @@
 
 dkim_default_config_file: /etc/default/opendkim
 
-dkim_opendkim_config: /etc/opendkim
+dkim_opendkim_config_dir: /etc/opendkim
 
 dkim_user: opendkim
 dkim_group: opendkim
