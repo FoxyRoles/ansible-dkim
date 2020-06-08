@@ -33,7 +33,7 @@ See also comments and default values in role's file [`default/main.yml`](default
 
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
-| `dkim_selector:` | email | Opendkim DNS registers' selector. It can be modified if several DKIM DNS records have to be defined for the same domain.  |
+| `dkim_selector:` | email | DKIM Public Key DNS record's selector. The definition of a value specific to the MTA server allows to associate the same domain several DKIM Public Keys as DNS records, one for each server that manages and signs mail of the domain.  |
 | `dkim_admin_email:` | none | e-mail address that manages Opendkim. You must define either `dkim_admin_email` or legacy `admin_email`. |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
 | `dkim_same_key:` | true | Whether Opendkim must generate and use the same key for all domains or one specific key for each domain.  |
