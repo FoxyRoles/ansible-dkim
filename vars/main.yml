@@ -1,0 +1,14 @@
+---
+# DKIM ANsible role vars
+
+dkim_postfix_config_default: 
+- parameter: milter_protocol
+  value: 6
+- parameter: milter_default_action
+  value: accept
+- parameter: smtpd_milters
+  value: inet:localhost:12301
+- parameter: non_smtpd_milters
+  value: inet:localhost:12301
+
+...

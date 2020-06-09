@@ -1,6 +1,16 @@
 ---
 ## Default Variables for ansible-dkim role
 
+### Opendkim debian/ubuntu package configuration
+
+dkim_default_config_file: /etc/default/opendkim
+
+dkim_opendkim_config_dir: /etc/opendkim
+
+dkim_user: opendkim
+dkim_group: opendkim
+
+### DKIM  configuration variables 
 ## The "selector" for opendkim keys and DNS records generation
 dkim_selector: email
 
@@ -18,3 +28,13 @@ dkim_admin_email: "{{ admin_email | default ( omit ) }}"
 
 ## Whether opendkim uses the same key for all domains or one key per domain
 dkim_same_key: true
+
+## Time, in seconds, that the role will pause to show the publik key DNS records
+dkim_dns_record_pause: 0
+
+dkim_postfix_config_file: /etc/postfix/main.cf
+
+## The parameters to set in postfix configuration
+## Default paramenters, defined in vars/main.yml, configure OPendkim as postfix milter
+dkim_postfix_config: '{{ dkim_postfix_config_default }}'
+...

@@ -1,4 +1,5 @@
 ---
+## Opendkin configuration tasks
 
 - name: opendkim packages are installed
   apt:
@@ -9,40 +10,55 @@
 
 - name: opendkim socket configured
   lineinfile:
-    dest: /etc/default/opendkim
+    dest: "{{ dkim_default_config_file }}"
     regexp: '^SOCKET='
     line: 'SOCKET="inet:12301@localhost"'
   notify:
    - restart opendkim
 
 - name: opendkim directory present
-  file: path=/etc/opendkim/keys state=directory
+  file: 
+    path: '{{ dkim_opendkim_config_dir }}/keys' 
+    state: directory
 
 - name: opendkim TrustedHosts present
-  copy: src=TrustedHosts dest=/etc/opendkim/TrustedHosts
+  copy: 
+    src: TrustedHosts
+    dest: '{{ dkim_opendkim_config_dir }}/TrustedHosts'
   notify:
    - restart opendkim
 
 - name: opendkim is configured
-  template: src=opendkim.conf.j2 dest=/etc/opendkim.conf
+  template: 
+    src: opendkim.conf.j2
+    dest: /etc/opendkim.conf
   notify:
    - restart opendkim
 
 - name: opendkim KeyTable is configured
-  template: src=KeyTable.j2 dest=/etc/opendkim/KeyTable
+  template:
+    src: KeyTable.j2
+    dest: '{{ dkim_opendkim_config_dir }}/KeyTable'
   notify:
    - restart opendkim
 
 - name: opendkim SigningTable is configured
-  template: src=SigningTable.j2 dest=/etc/opendkim/SigningTable
+  template:
+    src: SigningTable.j2
+    dest: '{{ dkim_opendkim_config_dir }}/SigningTable'
   notify:
    - restart opendkim
 
 - name: generate opendkim keys
   include_tasks: opendkim_keys.yml 
-  loop: '{{ [ dkim_domains[0] ] if dkim_same_key else dkim_domains }}'
+  loop: '{{ ( [ dkim_domains[0] ] if dkim_same_key else dkim_domains ) if dkim_domains is defined else [] }}'
   loop_control:
-    loop_var: domain
+    loop_var: dkim_domain
 
 - name: opendkim is running
-  service: name=opendkim state=started enabled=yes
+  service: 
+    name: opendkim
+    state: started
+    enabled: yes
+
+...
