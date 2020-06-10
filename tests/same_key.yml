@@ -1,0 +1,9 @@
+---
+- hosts:
+    - localhost
+  roles:
+    - role: dkim
+      dkim_same_key: true
+      dkim_domains:
+        - domain1.tld
+        - domain2.tld
