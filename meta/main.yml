@@ -20,7 +20,7 @@ galaxy_info:
     - buster
   galaxy_tags:
     - mail
-    - DKIM
+    - dkim
     - antispam
     - postfix
     - opendkim
