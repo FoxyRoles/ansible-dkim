@@ -28,6 +28,12 @@ env:
   - distribution: ubuntu
     version: focal
     playbook: different_keys.yml
+  - distribution: ubuntu
+    version: xenial
+    playbook: sendmail.yml
+  - distribution: debian
+    version: buster
+    playbook: sendmail.yml
 
 before_install:
   - 'sudo docker pull ${distribution}:${version}'
