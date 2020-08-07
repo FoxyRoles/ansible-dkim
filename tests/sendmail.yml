@@ -1,8 +1,8 @@
 ---
 - hosts:
-    - lxc.ubnt
+    - localhost
   roles:
-    - role: fox.dkim
+    - role: dkim
       dkim_mta: senmail
       dkim_domains:
         - domain1.tld
