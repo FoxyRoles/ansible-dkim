@@ -31,6 +31,18 @@ env:
   - distribution: ubuntu
     version: xenial
     playbook: sendmail.yml
+  - distribution: ubuntu
+    version: bionic
+    playbook: sendmail.yml
+  - distribution: ubuntu
+    version: focal
+    playbook: sendmail.yml
+  - distribution: debian
+    version: stretch
+    playbook: sendmail.yml
+  - distribution: debian
+    version: buster
+    playbook: sendmail.yml
 
 before_install:
   - 'sudo docker pull ${distribution}:${version}'
