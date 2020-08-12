@@ -21,7 +21,7 @@ galaxy_info:
     - mail
     - dkim
     - antispam
-    - postfix    - postfix
+    - postfix
     - sendmail
     - opendkim
 dependencies: []
