@@ -2,7 +2,7 @@
 ## DKIM role's handlers
 
 - name: restart opendkim
-  service: 
+  service:
     name: opendkim
     state: restarted
 
@@ -10,5 +10,14 @@
   service:
     name: postfix
     state: restarted
+
+- name: opendkim - restart sendmail
+  systemd:
+    name: sendmail
+    state: restarted
+
+- name: opendkim - refresh sendmail
+  shell: make -C {{ dkim_sendmail_config_folder }}/
+  notify: opendkim - restart sendmail
 
 ...

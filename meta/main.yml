@@ -3,8 +3,8 @@ galaxy_info:
   role_name: dkim
   author: Tomáš Jacík
   company: sunfoxcz
-  description: Configure OpenDKIM with Postfix
-  min_ansible_version: 2.9
+  description: Configure OpenDKIM with the MTA
+  min_ansible_version: 2.7
   license: MIT
   platforms:
   - name: Ubuntu
@@ -15,7 +15,6 @@ galaxy_info:
     - focal
   - name: Debian
     versions:
-    - jessie
     - stretch
     - buster
   galaxy_tags:
@@ -23,5 +22,6 @@ galaxy_info:
     - dkim
     - antispam
     - postfix
+    - sendmail
     - opendkim
 dependencies: []

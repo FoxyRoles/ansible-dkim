@@ -7,13 +7,13 @@
 
 - fail:
     msg: "bailing out, this role requires 'dkim_domains' to be defined as a list of domains."
-  when: 
+  when:
   - dkim_domains is not defined
   - dkim_domains is not list
 
 - import_tasks: opendkim.yml
 
-- import_tasks: postfix.yml
+- import_tasks: "{{ dkim_mta }}.yml"
 
 - include_tasks: dns_records.yml
   loop: '{{ dkim_domains if dkim_domains is defined else [] }}'

@@ -1,0 +1,19 @@
+---
+##  sendmail configuration for OpenDKIM messages signing integration
+
+- name: sendmail is installed
+  apt:
+    pkg: sendmail
+    state: present
+  tags: sendmail
+
+
+- name: opendkim configuration as a sendmail filter
+  lineinfile:
+    path: '{{ dkim_sendmail_config_file }}'
+    regexp: '^INPUT_MAIL_FILTER\(\`opendkim'
+    line: "INPUT_MAIL_FILTER(`opendkim', `S=inet:12301@127.0.0.1')dnl"
+    backup: yes
+  notify: opendkim - refresh sendmail
+  tags: sendmail
+
