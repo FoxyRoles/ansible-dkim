@@ -37,7 +37,8 @@ See also comments and default values in role's file [`default/main.yml`](default
 | `dkim_admin_email:` | none | e-mail address that manages Opendkim. You must define either `dkim_admin_email` or legacy `admin_email`. |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
 | `dkim_same_key:` | true | Whether Opendkim must generate and use the same key for all domains or one specific key for each domain.  |
-| `dkim_dns_record_pause:` | 0 | The time (in seconds) the role will pause to show the DNS records with the public keys that must be configured.  |
+<!--- | `dkim_dns_record_pause:` | 0 | The time (in seconds) the role will pause to show the DNS records with the public keys that must be configured.  | -->
+| `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
 
 ### Postfix configuration variables 
 
@@ -51,7 +52,7 @@ See also comments and default values in role's file [`default/main.yml`](default
 ---
 - hosts: myserver
   roles:
-    - role: sunfoxcz.dkim
+    - role: FoxyRoles.ansible-dkim
       # if admin_email variable is present, will be used as default for dkim_admin_email
       dkim_admin_email: my@mail.tld
       dkim_selector: mail

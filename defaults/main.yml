@@ -29,6 +29,10 @@ dkim_admin_email: "{{ admin_email | default ( omit ) }}"
 ## Whether opendkim uses the same key for all domains or one key per domain
 dkim_same_key: true
 
+## When generating key with opendkim-gkeygen, default RSA keylen is 2048
+## Other currently possible keylengths: 1024 or 4096.
+dkim_rsa_keylen: 2048
+
 ## Time, in seconds, that the role will pause to show the publik key DNS records
 dkim_dns_record_pause: 0
 

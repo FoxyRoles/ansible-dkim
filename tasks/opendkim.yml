@@ -20,6 +20,8 @@
   file: 
     path: '{{ dkim_opendkim_config_dir }}/keys' 
     state: directory
+    group: "{{ dkim_group }}"
+    mode: 0750
 
 - name: opendkim TrustedHosts present
   copy: 
