@@ -3,13 +3,12 @@
 
 - name: extract DKIM public key DNS record
   slurp:
-    src: "/etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}/{{ dkim_selector }}.txt"
+    src: "{{ dkim_opendkim_config_dir }}/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}/{{ dkim_selector }}.txt"
   register: dkim_dns_record
 
 - name: display DKIM public key DNS record
-  pause:
-    seconds: '{{ dkim_dns_record_pause }}'
-    prompt: |
+  debug:
+    msg: |
       ################################################################################################
       DNS record to add for zone {{ dkim_domain }}:
       {{ dkim_dns_record.content | string | b64decode }}
