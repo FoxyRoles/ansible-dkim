@@ -14,13 +14,4 @@
       {{ dkim_dns_record.content | string | b64decode }}
       ################################################################################################
 
-  # Pause module causes role to fail: https://github.com/FoxyRoles/ansible-dkim/issues/10
-  # pause:
-  #   seconds: '{{ dkim_dns_record_pause }}'
-  #   prompt: |
-  #     ################################################################################################
-  #     DNS record to add for zone {{ dkim_domain }}:
-  #     {{ dkim_dns_record.content | string | b64decode }}
-  #     ################################################################################################
-
 ...

@@ -33,9 +33,6 @@ dkim_same_key: true
 ## Other currently possible keylengths: 1024 or 4096.
 dkim_rsa_keylen: 2048
 
-## Time, in seconds, that the role will pause to show the publik key DNS records
-dkim_dns_record_pause: 0
-
 ## Select your MTA (postfix or sendmail)
 dkim_mta: postfix
 
