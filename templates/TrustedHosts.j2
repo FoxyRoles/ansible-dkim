@@ -1,0 +1,6 @@
+127.0.0.1
+localhost
+{% if dkim_trusted_hosts is defined and dkim_trusted_hosts | length > 0 %}
+{{ dkim_trusted_hosts | join("\n") }}
+{% endif %}
+

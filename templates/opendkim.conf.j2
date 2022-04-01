@@ -1,22 +1,30 @@
-AutoRestart             Yes
+AutoRestart             yes
 AutoRestartRate         10/1h
-UMask                   002
-Syslog                  yes
-SyslogSuccess           Yes
-LogWhy                  Yes
-ReportAddress           {{ dkim_admin_email }}
-
-Canonicalization        relaxed/simple
-
+Canonicalization        relaxed/relaxed
+Domain                  *
 ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts
 InternalHosts           refile:/etc/opendkim/TrustedHosts
-KeyTable                refile:/etc/opendkim/KeyTable
-SigningTable            refile:/etc/opendkim/SigningTable
-
+LogWhy                  yes
 Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
-
+Socket                  inet:12301@localhost
+SoftwareHeader          no
+SubDomains              no
+Syslog                  yes
+SyslogSuccess           yes
+TrustAnchorFile         /usr/share/dns/root.key
+UMask                   002
 UserID                  opendkim:opendkim
 
-Socket                  inet:12301@localhost
+{% if dkim_keyfile is defined and dkim_keyfile | count > 0 %}
+KeyFile                 {{ dkim_keyfile }}
+Selector                {{ dkim_selector }}
+{% else %}
+KeyTable                refile:/etc/opendkim/KeyTable
+SigningTable            refile:/etc/opendkim/SigningTable
+{% endif %}
+ReportAddress           {{ dkim_admin_email }}
+{% if dkim_nameservers is defined and dkim_nameservers | count > 0 %}
+Nameservers             {{ dkim_nameservers }}
+{% endif -%}

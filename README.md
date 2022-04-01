@@ -4,9 +4,9 @@ Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](
 
 ## Description
 
-This role configures DKIM mail signing service in a hosts that works as a Mail Transport Agent (MTA). 
+This role configures DKIM mail signing service in a hosts that works as a Mail Transport Agent (MTA).
 
-The role: 
+The role:
 * installs and configures opendkim,
 * creates private and public dkim keys for the domains it has to sign, declared in the `dkim_domains` variable,
 * installs postfix and configures it to pass all the messages of the configured domains to be signed by opendkim,
@@ -26,8 +26,8 @@ See also comments and default values in role's file [`default/main.yml`](default
 |:-------------------:|:------------------------:|:------------:|
 | `dkim_default_config_file:` | /etc/default/opendkim | Opendkim default values configuration file |
 | `dkim_opendkim_config_dir:` | /etc/opendkim | Opendkim configuration directory |
-| `dkim_user:` | opendkim | linux user that runs Opendkim | 
-| `dkim_group:` | opendkim | linux group that runs Opendkim | 
+| `dkim_user:` | opendkim | linux user that runs Opendkim |
+| `dkim_group:` | opendkim | linux group that runs Opendkim |
 
 ### Opendkim configuration parameters
 
@@ -38,8 +38,9 @@ See also comments and default values in role's file [`default/main.yml`](default
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
 | `dkim_same_key:` | true | Whether Opendkim must generate and use the same key for all domains or one specific key for each domain.  |
 | `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
+| `dkim_nameservers` | none | Nameservers. See details http://www.opendkim.org/staging/opendkim.conf.5.html  |
 
-### Postfix configuration variables 
+### Postfix configuration variables
 
   Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
@@ -58,7 +59,12 @@ See also comments and default values in role's file [`default/main.yml`](default
       dkim_domains:
        - domain1.tld
        - domain2.tld
+      dkim_keyfile: domain1.tld
       dkim_same_key: false
+      dkim_nameservers: 10.0.0.2
+      dkim_trusted_hosts:
+       - 10.0.0.0/16
+
 ```
 
 ### License

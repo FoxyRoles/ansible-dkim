@@ -1,7 +1,7 @@
 ---
-# DKIM ANsible role vars
+# DKIM Ansible role vars
 
-dkim_postfix_config_default: 
+dkim_postfix_config_default:
 - parameter: milter_protocol
   value: 6
 - parameter: milter_default_action
