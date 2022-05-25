@@ -17,10 +17,12 @@
   loop_control:
     loop_var: dkim_postfix_config_line
   tags: postfix
+  notify:
+    - opendkim - restart postfix
 
 - name: postfix is running
-  service: 
-    name: postfix 
+  service:
+    name: postfix
     state: started
     enabled: yes
   tags: postfix
