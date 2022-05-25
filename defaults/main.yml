@@ -26,6 +26,11 @@ dkim_admin_email: "{{ admin_email | default ( omit ) }}"
 #   - domain2.tld
 #   - domain3.tld
 
+## The list of trusted hosts for opendkim
+dkim_trustedhosts:
+  - 127.0.0.1
+  - localhost
+
 ## Whether opendkim uses the same key for all domains or one key per domain
 dkim_same_key: true
 

@@ -4,9 +4,9 @@ Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](
 
 ## Description
 
-This role configures DKIM mail signing service in a hosts that works as a Mail Transport Agent (MTA). 
+This role configures DKIM mail signing service in a hosts that works as a Mail Transport Agent (MTA).
 
-The role: 
+The role:
 * installs and configures opendkim,
 * creates private and public dkim keys for the domains it has to sign, declared in the `dkim_domains` variable,
 * installs postfix and configures it to pass all the messages of the configured domains to be signed by opendkim,
@@ -26,8 +26,8 @@ See also comments and default values in role's file [`default/main.yml`](default
 |:-------------------:|:------------------------:|:------------:|
 | `dkim_default_config_file:` | /etc/default/opendkim | Opendkim default values configuration file |
 | `dkim_opendkim_config_dir:` | /etc/opendkim | Opendkim configuration directory |
-| `dkim_user:` | opendkim | linux user that runs Opendkim | 
-| `dkim_group:` | opendkim | linux group that runs Opendkim | 
+| `dkim_user:` | opendkim | linux user that runs Opendkim |
+| `dkim_group:` | opendkim | linux group that runs Opendkim |
 
 ### Opendkim configuration parameters
 
@@ -35,11 +35,12 @@ See also comments and default values in role's file [`default/main.yml`](default
 |:-------------------:|:------------------------:|:------------:|
 | `dkim_selector:` | email | DKIM Public Key DNS record's selector. The definition of a value specific to the MTA server allows to associate the same domain several DKIM Public Keys as DNS records, one for each server that manages and signs mail of the domain.  |
 | `dkim_admin_email:` | none | e-mail address that manages Opendkim. You must define either `dkim_admin_email` or legacy `admin_email`. |
+| `dkim_trustedhosts:` | `['127.0.0.1','localhost']` | List of trusted hosts for opendkim |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
 | `dkim_same_key:` | true | Whether Opendkim must generate and use the same key for all domains or one specific key for each domain.  |
 | `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
 
-### Postfix configuration variables 
+### Postfix configuration variables
 
   Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
