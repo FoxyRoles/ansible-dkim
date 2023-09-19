@@ -38,10 +38,20 @@ dkim_same_key: true
 ## Other currently possible keylengths: 1024 or 4096.
 dkim_rsa_keylen: 2048
 
+## An optional local directory where the role downlad dkim keys to.
+## Be careful: this folder will contain sensitive data (private keys). It shouldn't be versionned with
+## your ansible code and other infrastructure data 
+# dkim_download_keys_dir: ../credentials/opendkim/{{ inventory_hostname }}
+
+## An optional local directory where  from the role uploads existing keys.
+## Be careful: this folder must contain key files exactly exactly as produced by this very role,
+## for instance downloaded from a previous installation with the previous option.
+# dkim_keys_to_upload_dir: ../credentials/opendkim/{{ inventory_hostname }}
+
 ## Select your MTA (postfix or sendmail)
 dkim_mta: postfix
 
-# Weather key files hav to be read and write allowed only to owner
+# Weather key files have to be read and write allowed only to owner
 # dkim_require_safe_keys: False
 
 dkim_postfix_config_file: /etc/postfix/main.cf
