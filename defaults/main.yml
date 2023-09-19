@@ -4,8 +4,8 @@
 ### Opendkim debian/ubuntu package configuration
 
 dkim_default_config_file: /etc/default/opendkim
-
 dkim_opendkim_config_dir: /etc/opendkim
+dkim_opendkim_run_dir: /var/run/opendkim
 
 dkim_user: opendkim
 dkim_group: opendkim
@@ -40,6 +40,9 @@ dkim_rsa_keylen: 2048
 
 ## Select your MTA (postfix or sendmail)
 dkim_mta: postfix
+
+# Weather key files hav to be read and write allowed only to owner
+# dkim_require_safe_keys: False
 
 dkim_postfix_config_file: /etc/postfix/main.cf
 
