@@ -2,9 +2,10 @@
 ## Postfix configuration for OpenDKIM messages signing integration
 
 - name: postfix is installed
-  apt:
-    pkg: postfix
-    state: present
+  ansible.builtin.package:
+    name:
+      - postfix
+  state: present
   tags: postfix
 
 - name: opendkim configuration as a postfix milter
