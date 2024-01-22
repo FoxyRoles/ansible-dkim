@@ -2,8 +2,8 @@
 ##  sendmail configuration for OpenDKIM messages signing integration
 
 - name: sendmail is installed
-  apt:
-    pkg: sendmail
+  ansible.builtin.package:
+    name: sendmail
     state: present
   tags: sendmail
 
