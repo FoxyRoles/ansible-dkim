@@ -7,7 +7,6 @@
     state: present
   tags: sendmail
 
-
 - name: opendkim configuration as a sendmail filter
   lineinfile:
     path: '{{ dkim_sendmail_config_file }}'
