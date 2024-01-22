@@ -3,9 +3,8 @@
 
 - name: postfix is installed
   ansible.builtin.package:
-    name:
-      - postfix
-  state: present
+    name: postfix
+    state: present
   tags: postfix
 
 - name: opendkim configuration as a postfix milter
