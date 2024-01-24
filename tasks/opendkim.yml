@@ -2,10 +2,10 @@
 ## Opendkin configuration tasks
 
 - name: opendkim packages are installed
-  apt:
-    pkg:
-    - opendkim
-    - opendkim-tools
+  package:
+    name:
+      - opendkim
+      - opendkim-tools
     state: present
 
 - name: opendkim socket configured
