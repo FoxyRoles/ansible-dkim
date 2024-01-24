@@ -41,6 +41,7 @@
   template:
     src: KeyTable.j2
     dest: '{{ dkim_opendkim_config_dir }}/KeyTable'
+  when: not dkim_generate_only
   notify:
    - restart opendkim
 
@@ -48,6 +49,7 @@
   template:
     src: SigningTable.j2
     dest: '{{ dkim_opendkim_config_dir }}/SigningTable'
+  when: not dkim_generate_only
   notify:
    - restart opendkim
 
