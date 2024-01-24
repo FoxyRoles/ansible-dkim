@@ -50,4 +50,7 @@ dkim_postfix_config: '{{ dkim_postfix_config_default }}'
 #sendmail config file and folder
 dkim_sendmail_config_folder: /etc/mail/
 dkim_sendmail_config_file: "{{ dkim_sendmail_config_folder }}sendmail.mc"
-...
+
+# generate and deploy certificates, or just generate, and keep existing config
+# this allows time to generate keys, publish them in dns, and then do a deploy
+dkim_generate_only: false
