@@ -47,6 +47,13 @@ See also comments and default values in role's file [`default/main.yml`](default
 | `dkim_postfix_config_file:` | /etc/postfix/main.cf | Postfix main configuration file |
 | `dkim_postfix_config:` | see [`vars/main.yml`](vars/main.yml) | List of parameters to be defined in Postfix configuration. Default configuration ensures opendkim is set up as a milter of Postfix to sign mails. You can define additional Postfix parameters using a list union. |
 
+### operational parameters
+
+|  Variable     |   Default value   |   Description  |
+|:-------------------:|:------------------------:|:------------:|
+| `dkim_generate_only:` | false | Only (false) generate DKIM keys and display records to provide the opportunity for DNS publication, or: (true) generate, display and immediately deploy to opendkim plus restart opendkim in the same run |
+
+
 ## Example playbook
 ```yaml
 ---
