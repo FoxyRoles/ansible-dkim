@@ -14,4 +14,15 @@
       - "{{ dkim_dns_record.content | string | b64decode }}"
       - "################################################################################################"
 
+- local_action:
+    module: copy
+    content: |
+          ################################################################################################
+          DNS record to add for zone {{ dkim_domain }}:
+          {{ dkim_dns_record.content | string | b64decode }}
+          ################################################################################################
+    dest: dns_record.{{ dkim_domain }}
+    backup: yes
+  when: dkim_generate_dns_files
+
 ...

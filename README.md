@@ -52,6 +52,7 @@ See also comments and default values in role's file [`default/main.yml`](default
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
 | `dkim_generate_only:` | false | Only (false) generate DKIM keys and display records to provide the opportunity for DNS publication, or: (true) generate, display and immediately deploy to opendkim plus restart opendkim in the same run |
+| `dkim_generate_dns_files:` | false | Whether or not to create local files, with correct formatting, containing required DKIM dns changes to accomodate easier further processing. |
 
 
 ## Example playbook
