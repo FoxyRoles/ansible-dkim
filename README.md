@@ -42,12 +42,12 @@ See also comments and default values in role's file [`default/main.yml`](default
 
 ### Postfix configuration variables
 
-  Variable     |   Default value   |   Description  |
+|  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
 | `dkim_postfix_config_file:` | /etc/postfix/main.cf | Postfix main configuration file |
 | `dkim_postfix_config:` | see [`vars/main.yml`](vars/main.yml) | List of parameters to be defined in Postfix configuration. Default configuration ensures opendkim is set up as a milter of Postfix to sign mails. You can define additional Postfix parameters using a list union. |
 
-### operational parameters
+### Operational parameters
 
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
