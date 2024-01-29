@@ -3,25 +3,34 @@
 
 - name: creates domain's keys directory
   file: 
-    path: "{{ dkim_opendkim_config_dir }}/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}"
+    path: '{{ dkim_key_dir }}'
     state: directory
 
 - name: ensure signing key is present
   stat: 
-    path: "{{ dkim_opendkim_config_dir }}/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}/{{ dkim_selector }}.private"
+    path: "{{ dkim_key_dir }}/{{ dkim_selector }}.private"
     get_md5: no
   register: dkim_key
 
 - name: generate signing key
-  command: opendkim-genkey -b {{ dkim_rsa_keylen }} -s {{ dkim_selector }} -d {{ dkim_domain }} -D {{ dkim_opendkim_config_dir }}/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}
+  command: opendkim-genkey -b {{ dkim_rsa_keylen }} -s {{ dkim_selector }} -d {{ dkim_domain }} -D {{ dkim_key_dir }}
   when: not dkim_key.stat.exists
   notify:
   - restart opendkim
 
 - name: ensure signing key owner
   file:
-    path: "{{ dkim_opendkim_config_dir }}/keys{{ '' if dkim_same_key else '/' ~ dkim_domain }}/{{ dkim_selector }}.private"
+    path: "{{dkim_key_dir }}/{{ dkim_selector }}.private"
     owner: '{{ dkim_user }}'
     group: '{{ dkim_group }}'
+
+- name: optionally dowload dkim keys
+  ansible.builtin.fetch:
+    src: '{{dkim_key_dir }}/{{ item }}'
+    dest: '{{ dkim_download_keys_dir }}'
+  loop:
+  - '{{ dkim_selector }}.private'
+  - '{{ dkim_selector }}.txt'
+  when: dkim_download_keys_dir is defined
 
 ...
