@@ -14,6 +14,13 @@
       - "{{ dkim_dns_record.content | string | b64decode }}"
       - "################################################################################################"
 
+- name: Create local dns files directory
+  ansible.builtin.file:
+    path: ./dns_records
+    state: directory
+  delegate_to: localhost
+  when: dkim_generate_dns_files
+
 - local_action:
     module: copy
     content: |
@@ -21,7 +28,7 @@
           DNS record to add for zone {{ dkim_domain }}:
           {{ dkim_dns_record.content | string | b64decode }}
           ################################################################################################
-    dest: dns_record.{{ dkim_domain }}
+    dest: ./dns_records/dns_record.{{ dkim_domain }}
     backup: yes
   when: dkim_generate_dns_files
 
