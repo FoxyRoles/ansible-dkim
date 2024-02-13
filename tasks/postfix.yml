@@ -7,6 +7,13 @@
     state: present
   tags: postfix
 
+- name: add postfix user to opendkim group
+  user:
+    name: postfix
+    groups: "{{ dkim_group }}"
+    append: true
+  when: dkim_socket | regex_search("^local:.*")
+
 - name: opendkim configuration as a postfix milter
   lineinfile:
     path: '{{ dkim_postfix_config_file }}'

@@ -1,6 +1,6 @@
 AutoRestart             Yes
 AutoRestartRate         10/1h
-UMask                   002
+UMask                   {% if dkim_socket | regex_search("^local:.*") %}007{% else %}002{% endif +%}
 Syslog                  yes
 SyslogSuccess           Yes
 LogWhy                  Yes
@@ -17,6 +17,6 @@ Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
 
-UserID                  opendkim:opendkim
+UserID                  {{ dkim_user }}:{{ dkim_group }}
 
-Socket                  inet:12301@localhost
+Socket                  {{ dkim_socket }}

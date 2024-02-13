@@ -1,5 +1,5 @@
 ---
-## Opendkin configuration tasks
+## Opendkim configuration tasks
 
 - name: opendkim packages are installed
   package:
@@ -12,7 +12,7 @@
   lineinfile:
     dest: "{{ dkim_default_config_file }}"
     regexp: '^SOCKET='
-    line: 'SOCKET="inet:12301@localhost"'
+    line: 'SOCKET="{{ dkim_socket }}"'
   notify:
    - restart opendkim
 

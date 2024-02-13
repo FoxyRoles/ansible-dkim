@@ -26,6 +26,9 @@ dkim_admin_email: "{{ admin_email | default ( omit ) }}"
 #   - domain2.tld
 #   - domain3.tld
 
+# The network or unix socket on which OpenDKIM sould listen
+dkim_socket: inet:12301@localhost
+
 ## The list of trusted hosts for opendkim
 dkim_trustedhosts:
   - 127.0.0.1
