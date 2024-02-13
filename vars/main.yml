@@ -7,8 +7,8 @@ dkim_postfix_config_default:
 - parameter: milter_default_action
   value: accept
 - parameter: smtpd_milters
-  value: inet:localhost:12301
+  value: "{{ dkim_socket }}"
 - parameter: non_smtpd_milters
-  value: inet:localhost:12301
+  value: "{{ dkim_socket }}"
 
 ...
