@@ -9,7 +9,7 @@
 - name: ensure signing key is present
   stat: 
     path: "{{ dkim_key_dir }}/{{ dkim_selector }}.private"
-    get_md5: no
+    get_checksum: false
   register: dkim_key
 
 - name: generate signing key
