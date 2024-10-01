@@ -2,10 +2,9 @@
 ## Default Variables for ansible-dkim role
 
 ### Opendkim package configuration
-# - Redhat : /etc/opendkim.conf
-# - Debian / default configuration default to : /etc/default/opendkim
-dkim_default_config_file: "{{ '/etc/opendkim.conf' if ansible_distribution_file_variety == 'RedHat' else '/etc/default/opendkim' }}"
-
+# - Debian  : /etc/default/opendkim
+# - Default : /etc/opendkim.conf
+dkim_default_config_file: "{{ '/etc/default/opendkim' if ansible_os_family == 'Debian' else '/etc/opendkim.conf' }}"
 
 dkim_opendkim_config_dir: /etc/opendkim
 
