@@ -1,5 +1,12 @@
 ---
 ## Opendkin configuration tasks
+- name: Install epel repository on RHEL based system
+  become: true
+  dnf:
+    name: epel-release
+    state: latest
+  when: 
+    - ansible_os_family == 'RedHat'
 
 - name: opendkim packages are installed
   package:

@@ -1,9 +1,10 @@
 ---
 ## Default Variables for ansible-dkim role
 
-### Opendkim debian/ubuntu package configuration
-
-dkim_default_config_file: /etc/default/opendkim
+### Opendkim package configuration
+# - Debian  : /etc/default/opendkim
+# - Default : /etc/opendkim.conf
+dkim_default_config_file: "{{ '/etc/default/opendkim' if ansible_os_family == 'Debian' else '/etc/opendkim.conf' }}"
 
 dkim_opendkim_config_dir: /etc/opendkim
 

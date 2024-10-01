@@ -1,6 +1,13 @@
 # ansible-dkim
 
-Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](http://opendkim.org/), an implementation for Linux of [DKIM mail signing](http://dkim.org/). Works on [Debian](https://debian.org) distributions and derived like [Ubuntu](https://ubuntu.com/).
+Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](http://opendkim.org/), an implementation for Linux of [DKIM mail signing](http://dkim.org/). 
+
+## Works on 
+
+- [Debian](https://debian.org)
+- Debian  derivatives like [Ubuntu](https://ubuntu.com/).
+- [Redhat](https://www.redhat.com/en) 9 and its derivatives like  [CentOS Stream 9](https://www.centos.org/) , [Rocky Linux 9](https://rockylinux.org/), [Alma Linux OS 9](https://almalinux.org/)
+- [Redhat](https://www.redhat.com/en) 8 and its derivatives like  [CentOS 8](https://www.centos.org/) , [Rocky Linux 8](https://rockylinux.org/), [Alma Linux OS 8](https://almalinux.org/)
 
 ## Description
 
