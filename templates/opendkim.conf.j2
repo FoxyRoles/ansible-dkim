@@ -20,3 +20,5 @@ SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
 
 Socket                  inet:12301@localhost
+
+{{ dkim_conf_override | default('') }}
