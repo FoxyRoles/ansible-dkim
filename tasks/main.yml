@@ -1,6 +1,4 @@
 ---
-## Tasks for Opendkim Ansible role
-
 - name: Validate the DKIM administrator address
   ansible.builtin.assert:
     that:
@@ -10,18 +8,35 @@
     fail_msg: Set dkim_admin_email to the administrator email address.
     quiet: true
 
-- fail:
-    msg: "bailing out, this role requires 'dkim_domains' to be defined as a list of domains."
-  when:
-  - dkim_domains is not defined
-  - dkim_domains is not list
+- name: Validate the DKIM domain list
+  ansible.builtin.assert:
+    that:
+      - dkim_domains is defined
+      - dkim_domains is sequence
+      - dkim_domains is not string
+      - dkim_domains is not mapping
+    fail_msg: Set dkim_domains to a list of domains.
+    quiet: true
 
-- import_tasks: read_key_table.yml
+- name: Validate the selected MTA
+  ansible.builtin.assert:
+    that: dkim_mta in ['postfix', 'sendmail']
+    fail_msg: Set dkim_mta to postfix or sendmail.
+    quiet: true
 
-- import_tasks: opendkim.yml
+- name: Read the existing OpenDKIM KeyTable
+  ansible.builtin.import_tasks: read_key_table.yml
 
-- import_tasks: "{{ dkim_mta }}.yml"
+- name: Configure OpenDKIM
+  ansible.builtin.import_tasks: opendkim.yml
 
-- import_tasks: dns_records.yml
+- name: Configure the Postfix integration
+  ansible.builtin.import_tasks: postfix.yml
+  when: dkim_mta == 'postfix'
 
-...
+- name: Configure the Sendmail integration
+  ansible.builtin.import_tasks: sendmail.yml
+  when: dkim_mta == 'sendmail'
+
+- name: Report the public DKIM records
+  ansible.builtin.import_tasks: dns_records.yml

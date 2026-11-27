@@ -4,19 +4,19 @@ galaxy_info:
   author: Tomáš Jacík
   company: sunfoxcz
   description: Configure OpenDKIM with the MTA
-  min_ansible_version: 2.7
+  min_ansible_version: '2.19'
   license: MIT
   platforms:
-  - name: Ubuntu
-    versions:
-    - trusty
-    - xenial
-    - bionic
-    - focal
-  - name: Debian
-    versions:
-    - stretch
-    - buster
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+        - resolute
+    - name: Debian
+      versions:
+        - bookworm
+        - trixie
   galaxy_tags:
     - mail
     - dkim

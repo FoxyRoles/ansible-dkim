@@ -1,28 +1,35 @@
 ---
 - name: create the domain keys directory
-  file:
+  ansible.builtin.file:
     path: '{{ dkim_key_dir }}'
     state: directory
     group: '{{ dkim_group }}'
     mode: '0750'
 
 - name: check for the domain signing key
-  stat:
+  ansible.builtin.stat:
     path: '{{ dkim_key_path }}.private'
     get_checksum: false
   register: dkim_key
 
 - name: generate signing key
-  command: >-
-    opendkim-genkey -b {{ dkim_rsa_keylen }} -s {{ dkim_selector | quote }}
-    -d {{ dkim_domain | quote }} -D {{ dkim_key_dir | quote }}
-  args:
+  ansible.builtin.command:
+    argv:
+      - opendkim-genkey
+      - -b
+      - '{{ dkim_rsa_keylen }}'
+      - -s
+      - '{{ dkim_selector }}'
+      - -d
+      - '{{ dkim_domain }}'
+      - -D
+      - '{{ dkim_key_dir }}'
     creates: '{{ dkim_key_path }}.private'
   when: not dkim_key.stat.exists
   notify: '{{ dkim_config_notify }}'
 
 - name: ensure signing key owner and mode
-  file:
+  ansible.builtin.file:
     path: '{{ dkim_key_path }}.private'
     owner: '{{ dkim_user }}'
     group: '{{ dkim_group }}'

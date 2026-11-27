@@ -2,17 +2,17 @@
 ## Postfix configuration for OpenDKIM messages signing integration
 
 - name: postfix is installed
-  package:
+  ansible.builtin.package:
     name: postfix
     state: present
   tags: postfix
 
 - name: opendkim configuration as a postfix milter
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: '{{ dkim_postfix_config_file }}'
     regexp: "^{{ dkim_postfix_config_line.parameter }}"
     line: "{{ dkim_postfix_config_line.parameter }} = {{ dkim_postfix_config_line.value }}"
-    backup: yes
+    backup: true
   loop: "{{ dkim_postfix_config }}"
   loop_control:
     loop_var: dkim_postfix_config_line
@@ -21,10 +21,10 @@
     - opendkim - restart postfix
 
 - name: postfix is running
-  service:
+  ansible.builtin.service:
     name: postfix
     state: started
-    enabled: yes
+    enabled: true
   tags: postfix
 
 ...

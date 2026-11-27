@@ -2,28 +2,29 @@
 ## Opendkin configuration tasks
 
 - name: opendkim packages are installed
-  package:
+  ansible.builtin.package:
     name:
       - opendkim
       - opendkim-tools
+      - openssl
     state: present
 
 - name: opendkim socket configured
-  lineinfile:
-    dest: "{{ dkim_default_config_file }}"
+  ansible.builtin.lineinfile:
+    path: '{{ dkim_default_config_file }}'
     regexp: '^SOCKET='
     line: 'SOCKET="inet:12301@localhost"'
   notify: '{{ dkim_config_notify }}'
 
 - name: opendkim directory present
-  file:
+  ansible.builtin.file:
     path: '{{ dkim_keys_dir }}'
     state: directory
     group: "{{ dkim_group }}"
-    mode: 0750
+    mode: '0750'
 
 - name: migrate keys referenced by legacy KeyTable rows
-  include_tasks: migrate_legacy_key.yml
+  ansible.builtin.include_tasks: migrate_legacy_key.yml
   loop: '{{ dkim_legacy_keys }}'
   loop_control:
     loop_var: dkim_legacy_key
@@ -31,19 +32,19 @@
     dkim_migration_key_dir: '{{ dkim_keys_dir }}/{{ dkim_legacy_key.domain }}'
 
 - name: prepare opendkim keys
-  include_tasks: opendkim_keys.yml
+  ansible.builtin.include_tasks: opendkim_keys.yml
   loop: '{{ dkim_domains }}'
   loop_control:
     loop_var: dkim_domain
 
 - name: opendkim TrustedHosts present
-  template:
+  ansible.builtin.template:
     src: TrustedHosts.j2
     dest: '{{ dkim_opendkim_config_dir }}/TrustedHosts'
   notify: '{{ dkim_config_notify }}'
 
 - name: opendkim SigningTable is configured
-  template:
+  ansible.builtin.template:
     src: SigningTable.j2
     dest: '{{ dkim_opendkim_config_dir }}/SigningTable'
   notify: '{{ dkim_config_notify }}'
@@ -51,14 +52,14 @@
 - name: deploy the OpenDKIM configuration and KeyTable
   block:
     - name: configure the OpenDKIM KeyTable
-      template:
+      ansible.builtin.template:
         src: KeyTable.j2
         dest: '{{ dkim_key_table_path }}'
       register: dkim_key_table_write
       notify: '{{ dkim_config_notify }}'
 
     - name: configure and validate opendkim.conf
-      template:
+      ansible.builtin.template:
         src: opendkim.conf.j2
         dest: /etc/opendkim.conf
         validate: opendkim -n -x %s
@@ -66,40 +67,40 @@
       notify: '{{ dkim_config_notify }}'
 
     - name: validate the installed configuration after updating the tables
-      command: opendkim -n -x /etc/opendkim.conf
+      ansible.builtin.command: opendkim -n -x /etc/opendkim.conf
       changed_when: false
       when: not ansible_check_mode and not dkim_config_write.changed
 
     - name: restart OpenDKIM before retiring the legacy keys
-      service:
+      ansible.builtin.service:
         name: opendkim
         state: restarted
       when: dkim_legacy_keys | length > 0 and not ansible_check_mode
 
     - name: opendkim is running
-      service:
+      ansible.builtin.service:
         name: opendkim
         state: started
-        enabled: yes
+        enabled: true
   rescue:
     - name: restore the previous KeyTable after failed validation or deployment
-      copy:
+      ansible.builtin.copy:
         content: '{{ dkim_key_table_content }}'
         dest: '{{ dkim_key_table_path }}'
       when: dkim_key_table_file.stat.exists and dkim_key_table_write is changed
 
     - name: report the OpenDKIM deployment failure
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_failed_result.stderr | default('', true) | trim or ansible_failed_result.msg | default('Cannot deploy the OpenDKIM configuration') }}"
 
 - name: verify the installed KeyTable before deleting old keys
-  slurp:
+  ansible.builtin.slurp:
     src: '{{ dkim_key_table_path }}'
   register: dkim_installed_key_table
   when: dkim_legacy_keys | length > 0 and not ansible_check_mode
 
 - name: remove the migrated legacy key pairs
-  file:
+  ansible.builtin.file:
     path: '{{ dkim_keys_dir }}/{{ item.0 }}.{{ item.1 }}'
     state: absent
   loop: "{{ (dkim_legacy_keys | map(attribute='selector') | unique(case_sensitive=true) | list) | product(['txt', 'private']) | list }}"

@@ -1,6 +1,6 @@
 # ansible-dkim
 
-Ansible role for configuring [Postfix](http://www.postfix.org/) with [OpenDKIM](http://opendkim.org/), an implementation for Linux of [DKIM mail signing](http://dkim.org/). Works on [Debian](https://debian.org) distributions and derived like [Ubuntu](https://ubuntu.com/).
+Ansible role for configuring [OpenDKIM](http://opendkim.org/) mail signing with [Postfix](http://www.postfix.org/) or Sendmail on Debian and Ubuntu.
 
 ## Description
 
@@ -9,10 +9,16 @@ This role configures DKIM mail signing service in a hosts that works as a Mail T
 The role:
 * installs and configures opendkim,
 * creates private and public dkim keys for the domains it has to sign, declared in the `dkim_domains` variable,
-* installs postfix and configures it to pass all the messages of the configured domains to be signed by opendkim,
+* installs the selected MTA and configures OpenDKIM as a mail filter,
 * shows the DNS records with the public keys and reports whether each TXT value is present.
 
 ## Requirements
+
+The role requires `ansible-core` 2.19 or later. Use ansible-core 2.19 for
+managed hosts running Python 3.8, including Ubuntu 20.04 LTS with its default
+Python. The controller needs Python 3.11–3.13 to run ansible-core 2.19.
+Ubuntu 26.04 LTS uses Python 3.14 by default and needs ansible-core 2.20 or
+later with that interpreter.
 
 The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requesting to sign. At the end, the role will give you the DNS records with the public keys of the domains that you will have to publish in the global DNS system.
 
@@ -36,7 +42,7 @@ disables automatic YAML line wrapping and requires ansible-core 2.21 or later.
 
 ## Role variable
 
-See also comments and default values in role's file [`default/main.yml`](default/main.yml).
+See also comments and default values in role's file [`defaults/main.yml`](defaults/main.yml).
 
 ### Opendkim package parameters
 
@@ -56,6 +62,8 @@ See also comments and default values in role's file [`default/main.yml`](default
 | `dkim_trustedhosts:` | `['127.0.0.1','localhost']` | List of trusted hosts for opendkim |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
 | `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
+| `dkim_mta:` | `postfix` | Mail transport agent. Set to `postfix` or `sendmail` in the playbook or inventory. |
+| `dkim_managed_comment:` | `ansible_managed` if defined, otherwise `Ansible managed` | Header comment in generated OpenDKIM configuration files. |
 | `dkim_conf_override:` | empty | Additional config inserted into /etc/opendkim.conf, such as "Nameservers 127.0.0.1". |
 
 ### Postfix configuration variables

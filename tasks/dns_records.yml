@@ -1,6 +1,6 @@
 ---
 - name: check for dig on the Ansible controller
-  shell: command -v dig
+  ansible.builtin.shell: command -v dig
   delegate_to: localhost
   become: false
   run_once: true
@@ -10,13 +10,13 @@
   register: dkim_dns_dig
 
 - name: warn when dig is unavailable on the Ansible controller
-  debug:
+  ansible.builtin.debug:
     msg: 'WARNING: dig is missing from PATH on the Ansible controller. Skipping the DKIM DNS lookup.'
   run_once: true
   when: dkim_dns_dig.rc | default(1) != 0
 
 - name: report the DKIM DNS records
-  include_tasks: dns_record.yml
-  loop: '{{ dkim_domains if dkim_domains is defined else [] }}'
+  ansible.builtin.include_tasks: dns_record.yml
+  loop: '{{ dkim_domains }}'
   loop_control:
     loop_var: dkim_domain

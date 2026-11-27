@@ -2,22 +2,24 @@
 ## DKIM role's handlers
 
 - name: restart opendkim
-  service:
+  ansible.builtin.service:
     name: opendkim
     state: restarted
 
 - name: opendkim - restart postfix
-  service:
+  ansible.builtin.service:
     name: postfix
     state: restarted
 
 - name: opendkim - restart sendmail
-  systemd:
+  ansible.builtin.systemd_service:
     name: sendmail
     state: restarted
 
 - name: opendkim - refresh sendmail
-  shell: make -C {{ dkim_sendmail_config_folder }}/
+  ansible.builtin.command:
+    cmd: make
+    chdir: '{{ dkim_sendmail_config_folder }}'
   notify: opendkim - restart sendmail
 
 ...

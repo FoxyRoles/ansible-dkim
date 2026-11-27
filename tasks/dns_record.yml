@@ -2,14 +2,14 @@
 ## Show the DKIM TXT record for one domain
 
 - name: check whether the DNS record is available in check mode
-  stat:
+  ansible.builtin.stat:
     path: '{{ dkim_key_path }}.txt'
     get_checksum: false
   register: dkim_dns_record_file
   when: ansible_check_mode
 
 - name: extract DKIM public key DNS record
-  slurp:
+  ansible.builtin.slurp:
     src: '{{ dkim_key_path }}.txt'
   register: dkim_dns_record
   when: not ansible_check_mode or dkim_dns_record_file.stat.exists
@@ -20,7 +20,7 @@
   when: dkim_dns_record is not skipped
   block:
     - name: look up the DKIM TXT record for {{ dkim_domain }}
-      command:
+      ansible.builtin.command:
         argv:
           - '{{ dkim_dns_dig.stdout | trim }}'
           - -r
@@ -42,7 +42,7 @@
       when: dkim_dns_dig.rc | default(1) == 0
 
     - name: display the DKIM TXT record for {{ dkim_domain }}
-      debug:
+      ansible.builtin.debug:
         msg:
           name: '{{ dkim_dns_name }}'
           type: TXT

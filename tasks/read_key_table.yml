@@ -1,24 +1,24 @@
 ---
 - name: check for the existing OpenDKIM KeyTable
-  stat:
+  ansible.builtin.stat:
     path: '{{ dkim_key_table_path }}'
     get_checksum: false
   register: dkim_key_table_file
 
 - name: read the existing OpenDKIM KeyTable
-  slurp:
+  ansible.builtin.slurp:
     src: '{{ dkim_key_table_path }}'
   register: dkim_key_table_read
   when: dkim_key_table_file.stat.exists
 
 - name: initialize KeyTable migration facts
-  set_fact:
+  ansible.builtin.set_fact:
     dkim_key_table_content: "{{ dkim_key_table_read.content | default('') | b64decode }}"
     dkim_legacy_keys: []
     dkim_migrated_key_table_lines: {}
 
 - name: parse the KeyTable rows with a legacy key path
-  set_fact:
+  ansible.builtin.set_fact:
     dkim_legacy_keys: >-
       {{ dkim_legacy_keys + [{'domain': item.1, 'selector': item.2, 'source': item.3}] }}
     dkim_migrated_key_table_lines: >-
