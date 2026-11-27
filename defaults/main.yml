@@ -9,6 +9,7 @@ dkim_opendkim_config_dir: /etc/opendkim
 
 dkim_user: opendkim
 dkim_group: opendkim
+dkim_managed_comment: "{{ ansible_managed | default('Ansible managed') }}"
 
 ### DKIM  configuration variables
 ## The "selector" for opendkim keys and DNS records generation

@@ -1,3 +1,4 @@
+{{ dkim_managed_comment | comment(prefix='', postfix='') | trim }}
 {% for domain in dkim_domains %}
 *@{{ domain }} {{ dkim_selector }}._domainkey.{{ domain }}
 {% endfor %}

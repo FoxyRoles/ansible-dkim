@@ -1,4 +1,4 @@
-# {{ ansible_managed }}
+{{ dkim_managed_comment | comment(prefix='', postfix='') | trim }}
 {% for trustedhost in dkim_trustedhosts %}
 {{ trustedhost }}
 {% endfor %}

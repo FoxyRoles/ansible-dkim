@@ -1,3 +1,4 @@
+{{ dkim_managed_comment | comment(prefix='', postfix='') | trim }}
 {% for domain in dkim_domains %}
 {{ dkim_selector }}._domainkey.{{ domain }} {{ domain }}:{{ dkim_selector }}:/etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ domain }}/{{ dkim_selector }}.private
 {% endfor %}
