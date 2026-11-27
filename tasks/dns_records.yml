@@ -1,26 +1,22 @@
 ---
-## Show the DNS records to configure with the DKIM public key
+- name: check for dig on the Ansible controller
+  shell: command -v dig
+  delegate_to: localhost
+  become: false
+  run_once: true
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  register: dkim_dns_dig
 
-- name: check whether the DNS record is available in check mode
-  stat:
-    path: '{{ dkim_key_path }}.txt'
-    get_checksum: false
-  register: dkim_dns_record_file
-  when: ansible_check_mode
-
-- name: extract DKIM public key DNS record
-  slurp:
-    src: '{{ dkim_key_path }}.txt'
-  register: dkim_dns_record
-  when: not ansible_check_mode or dkim_dns_record_file.stat.exists
-
-- name: display DKIM public key DNS record
+- name: warn when dig is unavailable on the Ansible controller
   debug:
-    msg:
-      - "################################################################################################"
-      - "DNS record to add for zone {{ dkim_domain }}:"
-      - "{{ dkim_dns_record.content | string | b64decode }}"
-      - "################################################################################################"
-  when: dkim_dns_record is not skipped
+    msg: 'WARNING: dig is missing from PATH on the Ansible controller. Skipping the DKIM DNS lookup.'
+  run_once: true
+  when: dkim_dns_dig.rc | default(1) != 0
 
-...
+- name: report the DKIM DNS records
+  include_tasks: dns_record.yml
+  loop: '{{ dkim_domains if dkim_domains is defined else [] }}'
+  loop_control:
+    loop_var: dkim_domain

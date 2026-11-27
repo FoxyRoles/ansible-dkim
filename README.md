@@ -10,11 +10,29 @@ The role:
 * installs and configures opendkim,
 * creates private and public dkim keys for the domains it has to sign, declared in the `dkim_domains` variable,
 * installs postfix and configures it to pass all the messages of the configured domains to be signed by opendkim,
-* shows the DNS records with the public keys that must be defined in the public DNS of the domains we sign.
+* shows the DNS records with the public keys and reports whether each TXT value is present.
 
 ## Requirements
 
 The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requesting to sign. At the end, the role will give you the DNS records with the public keys of the domains that you will have to publish in the global DNS system.
+
+The DNS lookup uses `dig` on the Ansible controller. If `dig` is unavailable,
+the role prints a warning and reports `dns_status: lookup_failed`.
+
+## Ansible output format
+
+To display long DKIM TXT values on a single line, run your playbook with these
+Ansible callback settings.
+
+```sh
+ANSIBLE_CALLBACK_RESULT_FORMAT=yaml ANSIBLE_CALLBACK_YAML_LINE_WIDTH=no-break \
+  ansible-playbook -i inventory playbook.yml
+```
+
+With the default stdout callback, `ANSIBLE_CALLBACK_RESULT_FORMAT=yaml` formats
+displayed task results throughout the run. `ANSIBLE_CALLBACK_YAML_LINE_WIDTH=no-break`
+disables automatic YAML line wrapping and requires ansible-core 2.21 or later.
+[Ansible stdout callback documentation](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/default_callback.html)
 
 ## Role variable
 

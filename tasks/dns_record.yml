@@ -1,0 +1,75 @@
+---
+## Show the DKIM TXT record for one domain
+
+- name: check whether the DNS record is available in check mode
+  stat:
+    path: '{{ dkim_key_path }}.txt'
+    get_checksum: false
+  register: dkim_dns_record_file
+  when: ansible_check_mode
+
+- name: extract DKIM public key DNS record
+  slurp:
+    src: '{{ dkim_key_path }}.txt'
+  register: dkim_dns_record
+  when: not ansible_check_mode or dkim_dns_record_file.stat.exists
+
+- name: report the DKIM TXT record
+  vars:
+    dkim_dns_name: '{{ dkim_selector }}._domainkey.{{ dkim_domain }}'
+  when: dkim_dns_record is not skipped
+  block:
+    - name: look up the DKIM TXT record for {{ dkim_domain }}
+      command:
+        argv:
+          - '{{ dkim_dns_dig.stdout | trim }}'
+          - -r
+          - +time=2
+          - +tries=1
+          - +noall
+          - +comments
+          - +answer
+          - -q
+          - '{{ dkim_dns_name.rstrip(".") }}.'
+          - -t
+          - TXT
+      delegate_to: localhost
+      become: false
+      check_mode: false
+      changed_when: false
+      failed_when: false
+      register: dkim_dns_lookup
+      when: dkim_dns_dig.rc | default(1) == 0
+
+    - name: display the DKIM TXT record for {{ dkim_domain }}
+      debug:
+        msg:
+          name: '{{ dkim_dns_name }}'
+          type: TXT
+          value: '{{ dkim_dns_txt_value or dkim_dns_record_text }}'
+          dns_status: >-
+            {%- if dkim_dns_lookup.rc | default(1) != 0 or dkim_dns_response_code not in ['NOERROR', 'NXDOMAIN'] -%}
+            lookup_failed
+            {%- elif dkim_dns_response_code == 'NXDOMAIN' or not dkim_dns_published_values -%}
+            missing
+            {%- elif dkim_dns_expected_value in dkim_dns_published_values -%}
+            published
+            {%- else -%}
+            different
+            {%- endif -%}
+      vars:
+        dkim_dns_record_text: '{{ dkim_dns_record.content | b64decode | trim }}'
+        dkim_dns_txt_rr_pattern: '(?im)^[ \t]*[^;\s]+(?:[ \t]+(?:IN|[0-9]+))*[ \t]+TXT[ \t]+(?:\(\s*)?((?:"(?:[^"\\\r\n]|\\.)*"\s*)+)'
+        dkim_dns_txt_chunk_pattern: '"(?:[^"\\\r\n]|\\.)*"'
+        dkim_dns_txt_content_pattern: '"((?:[^"\\\r\n]|\\.)*)"'
+        dkim_dns_txt_rdata: '{{ dkim_dns_record_text | regex_findall(dkim_dns_txt_rr_pattern) | first | default("") }}'
+        dkim_dns_txt_value: '{{ dkim_dns_txt_rdata | regex_findall(dkim_dns_txt_chunk_pattern) | join(" ") }}'
+        dkim_dns_expected_value: '{{ (dkim_dns_txt_rdata | regex_findall(dkim_dns_txt_content_pattern) | join) or dkim_dns_record_text }}'
+        dkim_dns_response: '{{ dkim_dns_lookup.stdout | default("") }}'
+        dkim_dns_rcode_pattern: '(?m)^;; ->>HEADER<<- .*\bstatus: ([A-Z]+),'
+        dkim_dns_response_code: '{{ dkim_dns_response | regex_findall(dkim_dns_rcode_pattern) | first | default("") }}'
+        dkim_dns_published_values: >-
+          {{ dkim_dns_response | regex_findall(dkim_dns_txt_rr_pattern)
+             | map('regex_findall', dkim_dns_txt_content_pattern) | map('join') | list }}
+
+...
