@@ -41,5 +41,5 @@
 - name: Report the public DKIM records
   ansible.builtin.import_tasks: dns_records.yml
 
-- name: Report deactivated domains
-  ansible.builtin.import_tasks: report_deactivated_domains.yml
+- name: Report unknown domains
+  ansible.builtin.import_tasks: report_unknown_domains.yml

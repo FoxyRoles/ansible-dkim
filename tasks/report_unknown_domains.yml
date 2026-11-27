@@ -1,0 +1,15 @@
+---
+- name: Report unknown domains
+  ansible.builtin.debug:
+    msg:
+      dkim_domains: '{{ dkim_unknown_domains }}'
+  vars:
+    dkim_domain_pattern: '[a-zA-Z0-9_][a-zA-Z0-9_.-]*'
+    dkim_signing_domains: >-
+      {{ dkim_signing_table_rows | map(attribute=0)
+         | select('search', '@' ~ dkim_domain_pattern ~ '$') | map('regex_replace', '^.*@', '') | list }}
+    dkim_key_domains: '{{ dkim_key_table_rows | map(attribute=2) | list }}'
+    dkim_unknown_domains: >-
+      {{ (dkim_signing_domains + dkim_key_domains) | select('match', '^' ~ dkim_domain_pattern ~ '$')
+         | reject('match', dkim_listed_domain_pattern) | unique | sort }}
+  when: dkim_unknown_domains | length > 0

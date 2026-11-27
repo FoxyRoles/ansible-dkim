@@ -19,7 +19,7 @@
     dkim_found_key_paths: '{{ dkim_key_files.files | map(attribute="path") | list }}'
     dkim_key_parent: '{{ item | dirname }}'
     dkim_private_path: '{{ item | regex_replace("[.]txt$", ".private") }}'
-    dkim_removed_key_paths: '{{ dkim_removed_key_table_rows | map(attribute=2) | map("trim") | list }}'
+    dkim_removed_key_paths: '{{ dkim_removed_key_table_rows | map(attribute=4) | map("trim") | list }}'
   when:
     - dkim_private_path not in dkim_referenced_keys
     - >-

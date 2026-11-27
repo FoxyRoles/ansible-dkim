@@ -1,4 +1,10 @@
 ---
+- name: read the installed SigningTable
+  ansible.builtin.slurp:
+    src: '{{ dkim_signing_table_path }}'
+  register: dkim_installed_signing_table
+  when: not ansible_check_mode
+
 - name: check for dig on the Ansible controller
   ansible.builtin.shell: command -v dig
   delegate_to: localhost
@@ -17,6 +23,23 @@
 
 - name: report the DKIM DNS records
   ansible.builtin.include_tasks: dns_record.yml
-  loop: '{{ dkim_domains }}'
+  vars:
+    dkim_signing_key_names: '{{ dkim_signing_table_rows | map(attribute=1) | list }}'
+    dkim_dns_domain: '{{ dkim_dns_key.2 }}'
+    dkim_dns_selector: '{{ dkim_dns_key.3 }}'
+    dkim_dns_key_path: '{{ dkim_dns_key.4 | trim }}'
+    dkim_dns_record_text: '{{ dkim_dns_record.content | default("") | b64decode | trim }}'
+    # A preview of a legacy migration must read the pair at its current location.
+    dkim_dns_private_key_path: >-
+      {{ dkim_legacy_keys | selectattr('domain', 'equalto', dkim_dns_domain)
+         | selectattr('selector', 'equalto', dkim_dns_selector) | map(attribute='source')
+         | first | default(dkim_dns_key_path)
+         if ansible_check_mode
+         and dkim_dns_key_path == dkim_keys_dir ~ '/' ~ dkim_dns_domain ~ '/' ~ dkim_dns_selector ~ '.private'
+         else dkim_dns_key_path }}
+  loop: >-
+    {{ dkim_key_table_rows | selectattr('1', 'in', dkim_signing_key_names)
+       | unique(attribute=1, case_sensitive=true) | list }}
   loop_control:
-    loop_var: dkim_domain
+    loop_var: dkim_dns_key
+    label: '{{ dkim_dns_key.1 }}'

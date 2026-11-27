@@ -24,6 +24,10 @@ The role requires that you configure all the rest of the mail management and you
 
 The DNS lookup uses `dig` on the Ansible controller. If `dig` is unavailable,
 the role prints a warning and reports `dns_status: lookup_failed`.
+The role reports TXT records for keys referenced by the resulting `SigningTable`,
+including preserved signing rules. It uses each key's domain, selector and file
+path from `KeyTable`. For RSA keys without a companion `.txt` file, it derives
+the public key on the managed host.
 
 ## Ansible output format
 
@@ -84,9 +88,9 @@ were deactivated stay deactivated on subsequent runs with
 `dkim_deactivate_unknown: false`. To restore a removed signing rule, add its
 domain to `dkim_domains` in your playbook.
 
-At the end of each run, the role lists domains from `KeyTable` that have no
-domain-specific rule in `SigningTable`. The report lists them under
-`dkim_domains` so you can append the entries you want to reactivate.
+The `Report unknown domains` task lists domains in the resulting `SigningTable`
+or `KeyTable` that are absent from `dkim_domains`. It includes domains with
+preserved signing rules and domains whose keys are kept after deactivation.
 
 Set `dkim_delete_unknown: true` to also retire the keys. Deletion covers
 generated key files and their `.txt` companions in unlisted domain directories,
@@ -128,8 +132,8 @@ release tag using Docker and Ansible on an Ubuntu 24.04 runner.
 
 The test runner translates the platform codenames in `galaxy_info.platforms`
 to versioned Docker tags. It checks idempotence, migration for unlisted domains
-in both signing modes, the report after switching deactivation off, and a dry
-run before deletion.
+in both signing modes, TXT output for preserved signing rules, and reporting
+before and after deactivation and deletion.
 Run it on Linux with rootful Docker Engine 28 or later, cgroups v2, and a Python
 3.12 virtual environment. Each container has a private cgroup namespace with a
 writable cgroup mount for systemd.

@@ -1,25 +1,47 @@
 ---
 ## Show the DKIM TXT record for one domain
 
-- name: check whether the DNS record is available in check mode
+- name: check whether the DNS record file is available
   ansible.builtin.stat:
-    path: '{{ dkim_key_path }}.txt'
+    path: '{{ dkim_dns_private_key_path | regex_replace("[.]private$", "") }}.txt'
     get_checksum: false
   register: dkim_dns_record_file
-  when: ansible_check_mode
+  when: dkim_dns_private_key_path is match('^/')
 
 - name: extract DKIM public key DNS record
   ansible.builtin.slurp:
-    src: '{{ dkim_key_path }}.txt'
+    src: '{{ dkim_dns_record_file.stat.path }}'
   register: dkim_dns_record
-  when: not ansible_check_mode or dkim_dns_record_file.stat.exists
+  when: dkim_dns_record_file.stat.exists | default(false)
+
+- name: derive the DKIM public key when the DNS record is unavailable
+  ansible.builtin.command:
+    expand_argument_vars: false
+    argv:
+      - openssl
+      - rsa
+      - -in
+      - '{{ dkim_dns_private_key_path }}'
+      - -passin
+      - 'pass:'
+      - -pubout
+  register: dkim_dns_public_key
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  when: not dkim_dns_record_text and dkim_dns_private_key_path is match('^/')
+
+- name: warn when the DKIM TXT value for {{ dkim_dns_domain }} is unavailable
+  ansible.builtin.debug:
+    msg: 'WARNING: Cannot read the DKIM TXT value for {{ dkim_dns_selector }}._domainkey.{{ dkim_dns_domain }}.'
+  when: not ansible_check_mode and not dkim_dns_record_text and dkim_dns_public_key.rc | default(1) != 0
 
 - name: report the DKIM TXT record
   vars:
-    dkim_dns_name: '{{ dkim_selector }}._domainkey.{{ dkim_domain }}'
-  when: dkim_dns_record is not skipped
+    dkim_dns_name: '{{ dkim_dns_selector }}._domainkey.{{ dkim_dns_domain }}'
+  when: dkim_dns_record_text | length > 0 or dkim_dns_public_key.rc | default(1) == 0
   block:
-    - name: look up the DKIM TXT record for {{ dkim_domain }}
+    - name: look up the DKIM TXT record for {{ dkim_dns_domain }}
       ansible.builtin.command:
         argv:
           - '{{ dkim_dns_dig.stdout | trim }}'
@@ -41,12 +63,12 @@
       register: dkim_dns_lookup
       when: dkim_dns_dig.rc | default(1) == 0
 
-    - name: display the DKIM TXT record for {{ dkim_domain }}
+    - name: display the DKIM TXT record for {{ dkim_dns_domain }}
       ansible.builtin.debug:
         msg:
           name: '{{ dkim_dns_name }}'
           type: TXT
-          value: '{{ dkim_dns_txt_value or dkim_dns_record_text }}'
+          value: '{{ dkim_dns_txt_value or dkim_dns_record_text or dkim_dns_derived_txt_value }}'
           dns_status: >-
             {%- if dkim_dns_lookup.rc | default(1) != 0 or dkim_dns_response_code not in ['NOERROR', 'NXDOMAIN'] -%}
             lookup_failed
@@ -58,13 +80,19 @@
             different
             {%- endif -%}
       vars:
-        dkim_dns_record_text: '{{ dkim_dns_record.content | b64decode | trim }}'
         dkim_dns_txt_rr_pattern: '(?im)^[ \t]*[^;\s]+(?:[ \t]+(?:IN|[0-9]+))*[ \t]+TXT[ \t]+(?:\(\s*)?((?:"(?:[^"\\\r\n]|\\.)*"\s*)+)'
         dkim_dns_txt_chunk_pattern: '"(?:[^"\\\r\n]|\\.)*"'
         dkim_dns_txt_content_pattern: '"((?:[^"\\\r\n]|\\.)*)"'
         dkim_dns_txt_rdata: '{{ dkim_dns_record_text | regex_findall(dkim_dns_txt_rr_pattern) | first | default("") }}'
         dkim_dns_txt_value: '{{ dkim_dns_txt_rdata | regex_findall(dkim_dns_txt_chunk_pattern) | join(" ") }}'
-        dkim_dns_expected_value: '{{ (dkim_dns_txt_rdata | regex_findall(dkim_dns_txt_content_pattern) | join) or dkim_dns_record_text }}'
+        dkim_dns_public_key_data: >-
+          {{ dkim_dns_public_key.stdout_lines | default([]) | reject('match', '^-----') | join }}
+        dkim_dns_derived_value: '{{ "v=DKIM1; h=sha256; k=rsa; p=" ~ dkim_dns_public_key_data }}'
+        dkim_dns_derived_txt_value: >-
+          {{ '"' ~ (dkim_dns_derived_value | regex_findall('.{1,255}') | join('" "')) ~ '"' }}
+        dkim_dns_expected_value: >-
+          {{ (dkim_dns_txt_rdata | regex_findall(dkim_dns_txt_content_pattern) | join)
+             or dkim_dns_record_text or dkim_dns_derived_value }}
         dkim_dns_response: '{{ dkim_dns_lookup.stdout | default("") }}'
         dkim_dns_rcode_pattern: '(?m)^;; ->>HEADER<<- .*\bstatus: ([A-Z]+),'
         dkim_dns_response_code: '{{ dkim_dns_response | regex_findall(dkim_dns_rcode_pattern) | first | default("") }}'

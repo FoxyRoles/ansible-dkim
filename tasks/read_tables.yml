@@ -34,7 +34,7 @@
   ansible.builtin.set_fact:
     dkim_removed_key_table_rows: >-
       {{ dkim_key_table_content | regex_findall(dkim_key_table_row_pattern)
-         | rejectattr('1', 'match', '(?i)^(?:' ~ (dkim_domains | map('regex_escape') | join('|')) ~ ')$')
+         | rejectattr('2', 'match', dkim_listed_domain_pattern)
          | list if dkim_delete_unknown | bool else [] }}
 
 - name: plan migration for retained legacy KeyTable entries

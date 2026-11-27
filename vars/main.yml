@@ -7,18 +7,23 @@ dkim_key_path: "{{ dkim_key_dir }}/{{ dkim_selector }}"
 dkim_key_table_path: "{{ dkim_opendkim_config_dir }}/KeyTable"
 dkim_signing_table_path: "{{ dkim_opendkim_config_dir }}/SigningTable"
 dkim_listed_domains: "{{ dkim_domains | map('lower') | list }}"
+dkim_listed_domain_pattern: "{{ '(?i)^(?:' ~ (dkim_listed_domains | map('regex_escape') | join('|')) ~ ')$' }}"
 dkim_restart_before_key_cleanup: "{{ (dkim_legacy_keys | length > 0) or (dkim_removed_key_table_rows | length > 0) }}"
 dkim_config_notify: "{{ [] if dkim_restart_before_key_cleanup else ['restart opendkim'] }}"
 dkim_key_table_row_pattern: >-
-  (?m)^([ \t]*[^#\s]+[ \t]+([^:\s]+):[^:\s]+:([^:#\r\n]+?)(?::[^#\s]+)?[ \t]*(?:#[^\r\n]*)?)\r?$
+  (?m)^([ \t]*([^#\s]+)[ \t]+([^:\s]+):([^:\s]+):([^:#\r\n]+?)(?::[^#\s]+)?[ \t]*(?:#[^\r\n]*)?)\r?$
 dkim_legacy_key_table_pattern: >-
   (?m)^([ \t]*[^#\s]+[ \t]+([a-zA-Z0-9_][a-zA-Z0-9_.-]*):([a-zA-Z0-9_][a-zA-Z0-9_.-]*):({{ dkim_keys_dir | regex_escape }}/\3\.private)[ \t]*(?:#[^\r\n]*)?)\r?$
+dkim_signing_table_row_pattern: '(?m)^[ \t]*([^#\s]+)[ \t]+([^:#\s]+)'
+dkim_configured_signing_table: >-
+  {{ lookup('ansible.builtin.template', 'SigningTable.j2') if ansible_check_mode
+     else dkim_installed_signing_table.content | b64decode }}
+dkim_signing_table_rows: '{{ dkim_configured_signing_table | regex_findall(dkim_signing_table_row_pattern) }}'
 dkim_configured_key_table: >-
   {{ lookup('ansible.builtin.template', 'KeyTable.j2') if ansible_check_mode
      else dkim_installed_key_table.content | b64decode }}
-dkim_referenced_keys: >-
-  {{ dkim_configured_key_table | regex_findall(dkim_key_table_row_pattern)
-     | map(attribute=2) | map('trim') | list }}
+dkim_key_table_rows: '{{ dkim_configured_key_table | regex_findall(dkim_key_table_row_pattern) }}'
+dkim_referenced_keys: '{{ dkim_key_table_rows | map(attribute=4) | map("trim") | list }}'
 
 dkim_postfix_config_default: 
 - parameter: milter_protocol

@@ -93,44 +93,54 @@ def verify_idempotence(command, environment):
         raise RuntimeError('The role changed on a repeated run')
 
 
-def verify_domain_report(command, environment, expected):
-    result = subprocess.run(command, env=environment, check=True, text=True, stdout=subprocess.PIPE)
+def verify_domain_report(command, environment, expected_unknown, expected_signing):
+    result = subprocess.run(command, env=environment, text=True, stdout=subprocess.PIPE)
     print(result.stdout, end='', flush=True)
-    report = result.stdout.partition('TASK [dkim : Report deactivated domains to append to dkim_domains]')[2]
+    result.check_returncode()
+    report = result.stdout.partition('TASK [dkim : Report unknown domains]')[2]
     report = re.split(r'\n(?:TASK \[|RUNNING HANDLER \[|PLAY RECAP)', report, maxsplit=1)[0]
     payload = report.partition('ok: [dkim_test] =>')[2].strip()
     domains = yaml.safe_load(payload)['msg']['dkim_domains'] if payload else []
-    if domains != expected:
-        raise RuntimeError(f'Expected deactivated domains {expected}, got {domains}')
+    if domains != expected_unknown:
+        raise RuntimeError(f'Expected unknown domains {expected_unknown}, got {domains}')
+
+    records = re.findall(
+        r'^TASK \[dkim : display the DKIM TXT record for ([^\]]+)\][^\n]*\nok: \[dkim_test\]',
+        result.stdout, re.MULTILINE,
+    )
+    if sorted(records) != expected_signing:
+        raise RuntimeError(f'Expected TXT records for {expected_signing}, got {records}')
 
 
 def test_unknown_domains(container, command, environment):
+    first = ['first.example.test']
+    both = [*first, 'second.example.test']
+    unknown = ['second.example.test']
     selected = {'dkim_domains': ['first.example.test']}
     for deactivate in (False, True):
         restore_legacy_key_layout(container)
         if deactivate:
             selected['dkim_deactivate_unknown'] = True
         verify_domain_report(
-            [*command, '--extra-vars', json.dumps(selected)], environment,
-            ['second.example.test'] if deactivate else [],
+            [*command, '--extra-vars', json.dumps(selected)], environment, unknown, first if deactivate else both,
         )
         verify_domains(container, unknown_signing=not deactivate, unknown_keys=True)
         verify_key_pair(container, '/etc/opendkim/keys/email', expected=False)
 
     preserve = dict(selected, dkim_deactivate_unknown=False)
     verify_domain_report(
-        [*command, '--extra-vars', json.dumps(preserve)], environment, ['second.example.test'],
+        [*command, '--extra-vars', json.dumps(preserve)], environment, unknown, first,
     )
     verify_domains(container, unknown_signing=False, unknown_keys=True)
 
-    verify_domain_report(command, environment, [])
+    verify_domain_report(command, environment, [], both)
     marker = '/etc/opendkim/keys/third.example.test/.keep'
     subprocess.run(['docker', 'exec', container, 'install', '-D', '/dev/null', marker], check=True)
     selected['dkim_delete_unknown'] = True
     delete_command = [*command, '--extra-vars', json.dumps(selected)]
-    verify_domain_report([*delete_command, '--check'], environment, [])
+    verify_domain_report([*delete_command, '--check'], environment, [], first)
     verify_domains(container, unknown_signing=True, unknown_keys=True)
-    verify_domain_report(delete_command, environment, [])
+    verify_domain_report(delete_command, environment, [], first)
     verify_domains(container, unknown_signing=False, unknown_keys=False)
     subprocess.run(['docker', 'exec', container, 'test', '-f', marker], check=True)
     verify_idempotence(delete_command, environment)
