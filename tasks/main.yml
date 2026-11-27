@@ -11,6 +11,8 @@
   - dkim_domains is not defined
   - dkim_domains is not list
 
+- import_tasks: read_key_table.yml
+
 - import_tasks: opendkim.yml
 
 - import_tasks: "{{ dkim_mta }}.yml"

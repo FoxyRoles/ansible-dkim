@@ -1,0 +1,39 @@
+---
+- name: check the source and destination signing keys
+  stat:
+    path: '{{ item }}'
+  loop:
+    - '{{ dkim_legacy_key.source }}'
+    - '{{ dkim_migration_key_dir }}/{{ dkim_legacy_key.selector }}.private'
+  register: dkim_migration_keys
+
+- name: verify that the legacy signing key can be migrated without overwriting a different key
+  assert:
+    that:
+      - dkim_migration_keys.results[0].stat.checksum is defined
+      - >-
+        not dkim_migration_keys.results[1].stat.exists or
+        (dkim_migration_keys.results[1].stat.checksum | default('')) == dkim_migration_keys.results[0].stat.checksum
+    fail_msg: 'Cannot migrate {{ dkim_legacy_key.source }} to {{ dkim_migration_key_dir }}. The source key is missing or the destination has a different key.'
+
+- name: create the destination directory for the legacy key pair
+  file:
+    path: '{{ dkim_migration_key_dir }}'
+    state: directory
+    group: '{{ dkim_group }}'
+    mode: '0750'
+
+- name: copy the legacy private key and DNS record
+  copy:
+    src: '{{ dkim_keys_dir }}/{{ dkim_legacy_key.selector }}.{{ item.extension }}'
+    dest: '{{ dkim_migration_key_dir }}/'
+    remote_src: true
+    owner: '{{ dkim_user }}'
+    group: '{{ dkim_group }}'
+    mode: '{{ item.mode }}'
+  loop:
+    - extension: private
+      mode: '0600'
+    - extension: txt
+      mode: '0644'
+  diff: false

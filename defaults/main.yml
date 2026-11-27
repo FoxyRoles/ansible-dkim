@@ -32,9 +32,6 @@ dkim_trustedhosts:
   - 127.0.0.1
   - localhost
 
-## Whether opendkim uses the same key for all domains or one key per domain
-dkim_same_key: true
-
 ## When generating key with opendkim-gkeygen, default RSA keylen is 2048
 ## Other currently possible keylengths: 1024 or 4096.
 dkim_rsa_keylen: 2048
@@ -51,7 +48,3 @@ dkim_postfix_config: '{{ dkim_postfix_config_default }}'
 #sendmail config file and folder
 dkim_sendmail_config_folder: /etc/mail/
 dkim_sendmail_config_file: "{{ dkim_sendmail_config_folder }}sendmail.mc"
-
-# generate and deploy certificates, or just generate, and keep existing config
-# this allows time to generate keys, publish them in dns, and then do a deploy
-dkim_generate_only: false

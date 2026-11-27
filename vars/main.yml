@@ -1,6 +1,14 @@
 ---
 # DKIM ANsible role vars
 
+dkim_keys_dir: "{{ dkim_opendkim_config_dir }}/keys"
+dkim_key_dir: "{{ dkim_keys_dir }}/{{ dkim_domain }}"
+dkim_key_path: "{{ dkim_key_dir }}/{{ dkim_selector }}"
+dkim_key_table_path: "{{ dkim_opendkim_config_dir }}/KeyTable"
+dkim_config_notify: "{{ [] if dkim_legacy_keys else ['restart opendkim'] }}"
+dkim_legacy_key_table_pattern: >-
+  (?m)^([ \t]*[^#\s]+[ \t]+([a-zA-Z0-9_][a-zA-Z0-9_.-]*):([a-zA-Z0-9_][a-zA-Z0-9_.-]*):({{ dkim_keys_dir | regex_escape }}/\3\.private)[ \t]*(?:#[^\r\n]*)?)\r?$
+
 dkim_postfix_config_default: 
 - parameter: milter_protocol
   value: 6

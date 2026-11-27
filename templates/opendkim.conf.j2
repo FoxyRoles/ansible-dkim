@@ -9,16 +9,16 @@ ReportAddress           {{ dkim_admin_email }}
 
 Canonicalization        relaxed/simple
 
-ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts
-InternalHosts           refile:/etc/opendkim/TrustedHosts
-KeyTable                refile:/etc/opendkim/KeyTable
-SigningTable            refile:/etc/opendkim/SigningTable
+ExternalIgnoreList      refile:{{ dkim_opendkim_config_dir }}/TrustedHosts
+InternalHosts           refile:{{ dkim_opendkim_config_dir }}/TrustedHosts
+KeyTable                refile:{{ dkim_key_table_path }}
+SigningTable            refile:{{ dkim_opendkim_config_dir }}/SigningTable
 
 Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
 
-UserID                  opendkim:opendkim
+UserID                  {{ dkim_user }}:{{ dkim_group }}
 
 Socket                  inet:12301@localhost
 

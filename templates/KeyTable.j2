@@ -1,4 +1,10 @@
 {{ dkim_managed_comment | comment(prefix='', postfix='') | trim }}
+{% set managed_names = dkim_domains | map('regex_replace', '^', dkim_selector ~ '._domainkey.') | list %}
 {% for domain in dkim_domains %}
-{{ dkim_selector }}._domainkey.{{ domain }} {{ domain }}:{{ dkim_selector }}:/etc/opendkim/keys{{ '' if dkim_same_key else '/' ~ domain }}/{{ dkim_selector }}.private
+{{ dkim_selector }}._domainkey.{{ domain }} {{ domain }}:{{ dkim_selector }}:{{ dkim_keys_dir }}/{{ domain }}/{{ dkim_selector }}.private
+{% endfor %}
+{% for line in dkim_key_table_content.splitlines() %}
+{% if line.split() and not line.lstrip().startswith('#') and line.split()[0] not in managed_names %}
+{{ dkim_migrated_key_table_lines.get(line, line) }}
+{% endif %}
 {% endfor %}

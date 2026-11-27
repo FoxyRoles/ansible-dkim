@@ -37,7 +37,6 @@ See also comments and default values in role's file [`default/main.yml`](default
 | `dkim_admin_email:` | none | e-mail address that manages Opendkim. You must define either `dkim_admin_email` or legacy `admin_email`. |
 | `dkim_trustedhosts:` | `['127.0.0.1','localhost']` | List of trusted hosts for opendkim |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
-| `dkim_same_key:` | true | Whether Opendkim must generate and use the same key for all domains or one specific key for each domain.  |
 | `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
 | `dkim_conf_override:` | empty | Additional config inserted into /etc/opendkim.conf, such as "Nameservers 127.0.0.1". |
 
@@ -48,11 +47,15 @@ See also comments and default values in role's file [`default/main.yml`](default
 | `dkim_postfix_config_file:` | /etc/postfix/main.cf | Postfix main configuration file |
 | `dkim_postfix_config:` | see [`vars/main.yml`](vars/main.yml) | List of parameters to be defined in Postfix configuration. Default configuration ensures opendkim is set up as a milter of Postfix to sign mails. You can define additional Postfix parameters using a list union. |
 
-### Operational parameters
+### Migrating existing keys
 
-|  Variable     |   Default value   |   Description  |
-|:-------------------:|:------------------------:|:------------:|
-| `dkim_generate_only:` | false | Only (false) generate DKIM keys and display records to provide the opportunity for DNS publication, or: (true) generate, display and immediately deploy to opendkim plus restart opendkim in the same run |
+The role reads the existing `KeyTable` before configuring OpenDKIM. For every
+row pointing directly to `keys/<selector>.private`, it copies the private key
+and its `.txt` DNS record to `keys/<domain>/`, using the domain and selector
+from that row. Each domain gets its own copy of a shared legacy key. The role
+updates the `KeyTable` paths and removes the original pair after OpenDKIM
+restarts successfully. If a destination has a different private key or a
+source file is missing, the migration stops and keeps the original files.
 
 
 ## Example playbook
@@ -67,7 +70,6 @@ See also comments and default values in role's file [`default/main.yml`](default
       dkim_domains:
        - domain1.tld
        - domain2.tld
-      dkim_same_key: false
 ```
 
 ### License
