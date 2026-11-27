@@ -1,4 +1,4 @@
-# ansible-dkim
+# sunfoxcz.ansible-dkim
 
 Ansible role for configuring [OpenDKIM](http://opendkim.org/) mail signing with [Postfix](http://www.postfix.org/) or Sendmail on Debian and Ubuntu.
 
