@@ -1,0 +1,57 @@
+name: Integration tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: ${{ matrix.target.image }} / ${{ matrix.mta }} / Ansible ${{ matrix.target.ansible_core }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - image: ubuntu:20.04
+            ansible_core: '2.19'
+          - image: ubuntu:22.04
+            ansible_core: '2.19'
+          - image: ubuntu:22.04
+            ansible_core: '2.21'
+          - image: ubuntu:24.04
+            ansible_core: '2.19'
+          - image: ubuntu:24.04
+            ansible_core: '2.21'
+          - image: ubuntu:26.04
+            ansible_core: '2.20'
+          - image: ubuntu:26.04
+            ansible_core: '2.21'
+          - image: debian:12
+            ansible_core: '2.19'
+          - image: debian:12
+            ansible_core: '2.21'
+          - image: debian:13
+            ansible_core: '2.19'
+          - image: debian:13
+            ansible_core: '2.21'
+        mta: [postfix, sendmail]
+    env:
+      DKIM_TEST_CORE: ${{ matrix.target.ansible_core }}
+      DKIM_TEST_IMAGE: ${{ matrix.target.image }}
+      DKIM_TEST_MTA: ${{ matrix.mta }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install Ansible and the Docker collection
+        run: |
+          python -m pip install "ansible-core~=${DKIM_TEST_CORE}.0"
+          python -m ansible.cli.galaxy collection install 'community.docker:>=5.4.0,<6'
+      - name: Test the DKIM role
+        run: python tests/run.py --image "$DKIM_TEST_IMAGE" "$DKIM_TEST_MTA"

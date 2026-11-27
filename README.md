@@ -97,6 +97,30 @@ source file is missing, the migration stops and keeps the original files.
        - domain2.tld
 ```
 
+## Integration tests
+
+[GitHub Actions](.github/workflows/integration.yml) runs a separate job for each
+image, MTA, and Ansible version in the matrix on pushes and pull requests.
+Each job applies the role inside a systemd container built from the selected
+release tag using Docker and Ansible on an Ubuntu 24.04 runner.
+
+The test runner translates the platform codenames in `galaxy_info.platforms`
+to versioned Docker tags and runs each playbook twice to verify idempotence.
+Run it on Linux with rootful Docker Engine 28 or later, cgroups v2, and a Python
+3.12 virtual environment. Each container has a private cgroup namespace with a
+writable cgroup mount for systemd.
+
+```sh
+python -m pip install 'ansible-core~=2.19.0'
+ansible-galaxy collection install 'community.docker:>=5.4.0,<6'
+python tests/run.py postfix
+python tests/run.py sendmail
+```
+
+Use `ansible-core~=2.20.0` to test Ubuntu 26.04, or `ansible-core~=2.21.0` to
+test all images from the matrix except Ubuntu 20.04. Use `--image ubuntu:20.04`
+to select one image. Codename aliases such as `ubuntu:focal` also work.
+
 ### License
 
 Licensed under MIT license. See [LICENSE](LICENSE.md) for details.
