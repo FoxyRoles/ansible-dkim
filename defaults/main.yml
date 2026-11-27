@@ -24,6 +24,9 @@ dkim_selector: email
 #   - domain2.tld
 #   - domain3.tld
 
+dkim_deactivate_unknown: false
+dkim_delete_unknown: false
+
 ## The list of trusted hosts for opendkim
 dkim_trustedhosts:
   - 127.0.0.1

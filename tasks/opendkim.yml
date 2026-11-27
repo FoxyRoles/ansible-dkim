@@ -43,14 +43,25 @@
     dest: '{{ dkim_opendkim_config_dir }}/TrustedHosts'
   notify: '{{ dkim_config_notify }}'
 
-- name: opendkim SigningTable is configured
-  ansible.builtin.template:
-    src: SigningTable.j2
-    dest: '{{ dkim_opendkim_config_dir }}/SigningTable'
-  notify: '{{ dkim_config_notify }}'
-
-- name: deploy the OpenDKIM configuration and KeyTable
+- name: deploy the OpenDKIM configuration and tables
+  vars:
+    dkim_previous_tables:
+      - path: '{{ dkim_key_table_path }}'
+        content: '{{ dkim_key_table_content }}'
+        existed: '{{ dkim_key_table_file.stat.exists }}'
+        changed: '{{ dkim_key_table_write.changed | default(false) }}'
+      - path: '{{ dkim_signing_table_path }}'
+        content: '{{ dkim_signing_table_content }}'
+        existed: '{{ dkim_signing_table_file.stat.exists }}'
+        changed: '{{ dkim_signing_table_write.changed | default(false) }}'
   block:
+    - name: configure the OpenDKIM SigningTable
+      ansible.builtin.template:
+        src: SigningTable.j2
+        dest: '{{ dkim_signing_table_path }}'
+      register: dkim_signing_table_write
+      notify: '{{ dkim_config_notify }}'
+
     - name: configure the OpenDKIM KeyTable
       ansible.builtin.template:
         src: KeyTable.j2
@@ -71,11 +82,11 @@
       changed_when: false
       when: not ansible_check_mode and not dkim_config_write.changed
 
-    - name: restart OpenDKIM before retiring the legacy keys
+    - name: restart OpenDKIM before removing retired keys
       ansible.builtin.service:
         name: opendkim
         state: restarted
-      when: dkim_legacy_keys | length > 0 and not ansible_check_mode
+      when: dkim_restart_before_key_cleanup and not ansible_check_mode
 
     - name: opendkim is running
       ansible.builtin.service:
@@ -83,30 +94,43 @@
         state: started
         enabled: true
   rescue:
-    - name: restore the previous KeyTable after failed validation or deployment
+    - name: restore the previous OpenDKIM tables after failed deployment
       ansible.builtin.copy:
-        content: '{{ dkim_key_table_content }}'
-        dest: '{{ dkim_key_table_path }}'
-      when: dkim_key_table_file.stat.exists and dkim_key_table_write is changed
+        content: '{{ item.content }}'
+        dest: '{{ item.path }}'
+      loop: '{{ dkim_previous_tables }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: item.changed and item.existed
+
+    - name: remove newly created OpenDKIM tables after failed deployment
+      ansible.builtin.file:
+        path: '{{ item.path }}'
+        state: absent
+      loop: '{{ dkim_previous_tables }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: item.changed and not item.existed
 
     - name: report the OpenDKIM deployment failure
       ansible.builtin.fail:
         msg: "{{ ansible_failed_result.stderr | default('', true) | trim or ansible_failed_result.msg | default('Cannot deploy the OpenDKIM configuration') }}"
 
-- name: verify the installed KeyTable before deleting old keys
+- name: read the installed KeyTable
   ansible.builtin.slurp:
     src: '{{ dkim_key_table_path }}'
   register: dkim_installed_key_table
-  when: dkim_legacy_keys | length > 0 and not ansible_check_mode
+  when: not ansible_check_mode
 
 - name: remove the migrated legacy key pairs
   ansible.builtin.file:
     path: '{{ dkim_keys_dir }}/{{ item.0 }}.{{ item.1 }}'
     state: absent
   loop: "{{ (dkim_legacy_keys | map(attribute='selector') | unique(case_sensitive=true) | list) | product(['txt', 'private']) | list }}"
-  vars:
-    dkim_key_table_path_pattern: '(?m)^[ \t]*[^#\s]+[ \t]+[^:\s]+:[^:\s]+:(.*?\.private)[ \t]*(?:#[^\r\n]*)?\r?$'
-    dkim_referenced_keys: '{{ dkim_installed_key_table.content | b64decode | regex_findall(dkim_key_table_path_pattern) }}'
-  when: ansible_check_mode or (dkim_keys_dir ~ '/' ~ item.0 ~ '.private') not in dkim_referenced_keys
+  when: (dkim_keys_dir ~ '/' ~ item.0 ~ '.private') not in dkim_referenced_keys
+
+- name: remove keys belonging to unlisted domains
+  ansible.builtin.include_tasks: delete_unknown_keys.yml
+  when: dkim_delete_unknown | bool
 
 ...

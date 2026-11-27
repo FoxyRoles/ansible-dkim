@@ -1,0 +1,24 @@
+---
+- name: Read the installed SigningTable
+  ansible.builtin.slurp:
+    src: '{{ dkim_signing_table_path }}'
+  register: dkim_installed_signing_table
+  when: not ansible_check_mode
+
+- name: Report deactivated domains to append to dkim_domains
+  ansible.builtin.debug:
+    msg:
+      dkim_domains: '{{ dkim_deactivated_domains }}'
+  vars:
+    dkim_configured_signing_table: >-
+      {{ lookup('ansible.builtin.template', 'SigningTable.j2') if ansible_check_mode
+         else dkim_installed_signing_table.content | b64decode }}
+    dkim_signing_domains: >-
+      {{ dkim_configured_signing_table | regex_findall(dkim_signing_domain_pattern) }}
+    dkim_signing_domain_pattern: '(?m)^[ \t]*[^#\s]*@([a-zA-Z0-9_][a-zA-Z0-9_.-]*)[ \t]+[^#\s]+'
+    dkim_deactivated_domains: >-
+      {{ dkim_configured_key_table | regex_findall(dkim_key_table_row_pattern) | map(attribute=1)
+         | select('match', '^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$')
+         | reject('match', '(?i)^(?:' ~ (dkim_signing_domains | map('regex_escape') | join('|')) ~ ')$')
+         | unique | sort }}
+  when: dkim_deactivated_domains | length > 0

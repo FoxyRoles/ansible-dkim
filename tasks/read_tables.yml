@@ -1,0 +1,48 @@
+---
+- name: check for the existing OpenDKIM KeyTable
+  ansible.builtin.stat:
+    path: '{{ dkim_key_table_path }}'
+    get_checksum: false
+  register: dkim_key_table_file
+
+- name: read the existing OpenDKIM KeyTable
+  ansible.builtin.slurp:
+    src: '{{ dkim_key_table_path }}'
+  register: dkim_key_table_read
+  when: dkim_key_table_file.stat.exists
+
+- name: check for the existing OpenDKIM SigningTable
+  ansible.builtin.stat:
+    path: '{{ dkim_signing_table_path }}'
+    get_checksum: false
+  register: dkim_signing_table_file
+
+- name: read the existing OpenDKIM SigningTable
+  ansible.builtin.slurp:
+    src: '{{ dkim_signing_table_path }}'
+  register: dkim_signing_table_read
+  when: dkim_signing_table_file.stat.exists
+
+- name: initialize OpenDKIM table facts
+  ansible.builtin.set_fact:
+    dkim_key_table_content: "{{ dkim_key_table_read.content | default('') | b64decode }}"
+    dkim_signing_table_content: "{{ dkim_signing_table_read.content | default('') | b64decode }}"
+    dkim_legacy_keys: []
+    dkim_migrated_key_table_lines: {}
+
+- name: identify KeyTable entries for deletion
+  ansible.builtin.set_fact:
+    dkim_removed_key_table_rows: >-
+      {{ dkim_key_table_content | regex_findall(dkim_key_table_row_pattern)
+         | rejectattr('1', 'match', '(?i)^(?:' ~ (dkim_domains | map('regex_escape') | join('|')) ~ ')$')
+         | list if dkim_delete_unknown | bool else [] }}
+
+- name: plan migration for retained legacy KeyTable entries
+  ansible.builtin.set_fact:
+    dkim_legacy_keys: >-
+      {{ dkim_legacy_keys + [{'domain': item.1, 'selector': item.2, 'source': item.3}] }}
+    dkim_migrated_key_table_lines: >-
+      {{ dkim_migrated_key_table_lines | combine({item.0: item.0.split(':' ~ item.3, 1)
+         | join(':' ~ dkim_keys_dir ~ '/' ~ item.1 ~ '/' ~ item.2 ~ '.private')}) }}
+  loop: '{{ dkim_key_table_content | regex_findall(dkim_legacy_key_table_pattern) }}'
+  when: item.0 not in (dkim_removed_key_table_rows | map('first') | list)

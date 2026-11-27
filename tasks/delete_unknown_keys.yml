@@ -1,0 +1,55 @@
+---
+- name: find key files in the OpenDKIM keys directory
+  ansible.builtin.find:
+    paths: '{{ dkim_keys_dir }}'
+    patterns:
+      - '*.private'
+      - '*.txt'
+    recurse: true
+    depth: 2
+  register: dkim_key_files
+
+- name: delete unreferenced key files belonging to unlisted domains
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: absent
+  # Remove TXT records before their private keys so a retry can still find the pair.
+  loop: '{{ dkim_found_key_paths | sort(reverse=true, case_sensitive=true) }}'
+  vars:
+    dkim_found_key_paths: '{{ dkim_key_files.files | map(attribute="path") | list }}'
+    dkim_key_parent: '{{ item | dirname }}'
+    dkim_private_path: '{{ item | regex_replace("[.]txt$", ".private") }}'
+    dkim_removed_key_paths: '{{ dkim_removed_key_table_rows | map(attribute=2) | map("trim") | list }}'
+  when:
+    - dkim_private_path not in dkim_referenced_keys
+    - >-
+      dkim_private_path in dkim_removed_key_paths or
+      (dkim_private_path in dkim_found_key_paths and dkim_key_parent != dkim_keys_dir and
+      (dkim_key_parent | basename | lower) not in dkim_listed_domains)
+
+- name: remove empty key directories for unlisted domains
+  when: not ansible_check_mode
+  block:
+    - name: find the immediate domain key directories
+      ansible.builtin.find:
+        paths: '{{ dkim_keys_dir }}'
+        file_type: directory
+      register: dkim_domain_key_directories
+
+    - name: remove the domain directory if it is empty
+      ansible.builtin.command:
+        expand_argument_vars: false
+        argv:
+          - rmdir
+          - --
+          - '{{ item }}'
+      environment:
+        LC_ALL: C
+      loop: '{{ dkim_domain_key_directories.files | map(attribute="path") | list }}'
+      register: dkim_remove_key_directory
+      when: (item | basename | lower) not in dkim_listed_domains
+      changed_when: dkim_remove_key_directory.rc == 0
+      failed_when:
+        - dkim_remove_key_directory.rc != 0
+        - "'Directory not empty' not in dkim_remove_key_directory.stderr"
+        - "'No such file or directory' not in dkim_remove_key_directory.stderr"

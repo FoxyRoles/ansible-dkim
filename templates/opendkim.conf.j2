@@ -12,7 +12,7 @@ Canonicalization        relaxed/simple
 ExternalIgnoreList      refile:{{ dkim_opendkim_config_dir }}/TrustedHosts
 InternalHosts           refile:{{ dkim_opendkim_config_dir }}/TrustedHosts
 KeyTable                refile:{{ dkim_key_table_path }}
-SigningTable            refile:{{ dkim_opendkim_config_dir }}/SigningTable
+SigningTable            refile:{{ dkim_signing_table_path }}
 
 Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid

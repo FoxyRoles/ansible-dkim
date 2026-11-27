@@ -1,10 +1,11 @@
 {{ dkim_managed_comment | comment(prefix='', postfix='') | trim }}
 {% set managed_names = dkim_domains | map('regex_replace', '^', dkim_selector ~ '._domainkey.') | list %}
+{% set removed_lines = dkim_removed_key_table_rows | map('first') | list %}
 {% for domain in dkim_domains %}
 {{ dkim_selector }}._domainkey.{{ domain }} {{ domain }}:{{ dkim_selector }}:{{ dkim_keys_dir }}/{{ domain }}/{{ dkim_selector }}.private
 {% endfor %}
 {% for line in dkim_key_table_content.splitlines() %}
-{% if line.split() and not line.lstrip().startswith('#') and line.split()[0] not in managed_names %}
+{% if line.split() and not line.lstrip().startswith('#') and line.split()[0] not in managed_names and line not in removed_lines %}
 {{ dkim_migrated_key_table_lines.get(line, line) }}
 {% endif %}
 {% endfor %}

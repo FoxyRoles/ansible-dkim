@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from pathlib import Path
 import re
@@ -45,6 +46,96 @@ def wait_for_systemd(container):
     raise RuntimeError(f'systemd did not reach multi-user.target in {container}')
 
 
+def verify_domains(container, unknown_signing, unknown_keys):
+    for table, unknown_present in [('SigningTable', unknown_signing), ('KeyTable', unknown_keys)]:
+        content = subprocess.check_output(
+            ['docker', 'exec', container, 'cat', f'/etc/opendkim/{table}'], text=True,
+        )
+        if 'first.example.test' not in content or ('second.example.test' in content) != unknown_present:
+            raise RuntimeError(f'Unexpected contents of {table}:\n{content}')
+        if table == 'KeyTable' and unknown_keys and '/keys/second.example.test/email.private' not in content:
+            raise RuntimeError(f'Unexpected key path in {table}:\n{content}')
+
+    for domain, expected in [('first.example.test', True), ('second.example.test', unknown_keys)]:
+        directory = f'/etc/opendkim/keys/{domain}'
+        result = subprocess.run(['docker', 'exec', container, 'test', '-d', directory])
+        if result.returncode != (0 if expected else 1):
+            raise RuntimeError(f'Unexpected key directory state: {directory}')
+        verify_key_pair(container, f'{directory}/email', expected)
+
+
+def verify_key_pair(container, key_path, expected):
+    for extension in ('private', 'txt'):
+        path = f'{key_path}.{extension}'
+        result = subprocess.run(['docker', 'exec', container, 'test', '-f', path])
+        if result.returncode != (0 if expected else 1):
+            raise RuntimeError(f'Unexpected key file state: {path}')
+
+
+def restore_legacy_key_layout(container):
+    subprocess.run(
+        ['docker', 'exec', container, 'sh', '-ec', r'''
+            cd /etc/opendkim
+            mv keys/second.example.test/email.private keys/email.private
+            mv keys/second.example.test/email.txt keys/email.txt
+            rmdir keys/second.example.test
+            sed -i 's|/keys/second\.example\.test/email\.private|/keys/email.private|' KeyTable
+        '''],
+        check=True,
+    )
+
+
+def verify_idempotence(command, environment):
+    repeated_run = subprocess.run(command, env=environment, text=True, stdout=subprocess.PIPE)
+    print(repeated_run.stdout, end='', flush=True)
+    repeated_run.check_returncode()
+    if not re.search(r'^dkim_test\s*:.*\bchanged=0\b', repeated_run.stdout, re.MULTILINE):
+        raise RuntimeError('The role changed on a repeated run')
+
+
+def verify_domain_report(command, environment, expected):
+    result = subprocess.run(command, env=environment, check=True, text=True, stdout=subprocess.PIPE)
+    print(result.stdout, end='', flush=True)
+    report = result.stdout.partition('TASK [dkim : Report deactivated domains to append to dkim_domains]')[2]
+    report = re.split(r'\n(?:TASK \[|RUNNING HANDLER \[|PLAY RECAP)', report, maxsplit=1)[0]
+    payload = report.partition('ok: [dkim_test] =>')[2].strip()
+    domains = yaml.safe_load(payload)['msg']['dkim_domains'] if payload else []
+    if domains != expected:
+        raise RuntimeError(f'Expected deactivated domains {expected}, got {domains}')
+
+
+def test_unknown_domains(container, command, environment):
+    selected = {'dkim_domains': ['first.example.test']}
+    for deactivate in (False, True):
+        restore_legacy_key_layout(container)
+        if deactivate:
+            selected['dkim_deactivate_unknown'] = True
+        verify_domain_report(
+            [*command, '--extra-vars', json.dumps(selected)], environment,
+            ['second.example.test'] if deactivate else [],
+        )
+        verify_domains(container, unknown_signing=not deactivate, unknown_keys=True)
+        verify_key_pair(container, '/etc/opendkim/keys/email', expected=False)
+
+    preserve = dict(selected, dkim_deactivate_unknown=False)
+    verify_domain_report(
+        [*command, '--extra-vars', json.dumps(preserve)], environment, ['second.example.test'],
+    )
+    verify_domains(container, unknown_signing=False, unknown_keys=True)
+
+    verify_domain_report(command, environment, [])
+    marker = '/etc/opendkim/keys/third.example.test/.keep'
+    subprocess.run(['docker', 'exec', container, 'install', '-D', '/dev/null', marker], check=True)
+    selected['dkim_delete_unknown'] = True
+    delete_command = [*command, '--extra-vars', json.dumps(selected)]
+    verify_domain_report([*delete_command, '--check'], environment, [])
+    verify_domains(container, unknown_signing=True, unknown_keys=True)
+    verify_domain_report(delete_command, environment, [])
+    verify_domains(container, unknown_signing=False, unknown_keys=False)
+    subprocess.run(['docker', 'exec', container, 'test', '-f', marker], check=True)
+    verify_idempotence(delete_command, environment)
+
+
 def test_image(image, playbook, workspace, environment):
     print(f'Testing {playbook.stem} on {image} with ansible-core {ansible_version}', flush=True)
     tag = f'sunfoxcz-dkim-test:{image.replace(":", "-")}'
@@ -74,12 +165,8 @@ def test_image(image, playbook, workspace, environment):
         command = [sys.executable, '-m', 'ansible.cli.playbook', '-i', str(inventory), str(playbook)]
         subprocess.run([*command, '--syntax-check'], env=environment, check=True)
         subprocess.run(command, env=environment, check=True)
-
-        second_run = subprocess.run(command, env=environment, text=True, stdout=subprocess.PIPE)
-        print(second_run.stdout, end='', flush=True)
-        second_run.check_returncode()
-        if not re.search(r'^dkim_test\s*:.*\bchanged=0\b', second_run.stdout, re.MULTILINE):
-            raise RuntimeError(f'{playbook.stem} was not idempotent on {image}')
+        verify_idempotence(command, environment)
+        test_unknown_domains(container, command, environment)
     finally:
         subprocess.run(['docker', 'rm', '--force', container], stdout=subprocess.DEVNULL, check=False)
 

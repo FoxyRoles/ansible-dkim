@@ -61,6 +61,8 @@ See also comments and default values in role's file [`defaults/main.yml`](defaul
 | `dkim_admin_email:` | none | Required OpenDKIM administrator email address. |
 | `dkim_trustedhosts:` | `['127.0.0.1','localhost']` | List of trusted hosts for opendkim |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
+| `dkim_deactivate_unknown:` | `false` | Rebuild `SigningTable` from `dkim_domains`. Existing `KeyTable` entries and keys for unlisted domains are kept. |
+| `dkim_delete_unknown:` | `false` | Rebuild `SigningTable` from `dkim_domains`, remove unlisted domains from `KeyTable`, and delete their unused key files. Overrides `dkim_deactivate_unknown`. |
 | `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
 | `dkim_mta:` | `postfix` | Mail transport agent. Set to `postfix` or `sendmail` in the playbook or inventory. |
 | `dkim_managed_comment:` | `ansible_managed` if defined, otherwise `Ansible managed` | Header comment in generated OpenDKIM configuration files. |
@@ -73,15 +75,35 @@ See also comments and default values in role's file [`defaults/main.yml`](defaul
 | `dkim_postfix_config_file:` | /etc/postfix/main.cf | Postfix main configuration file |
 | `dkim_postfix_config:` | see [`vars/main.yml`](vars/main.yml) | List of parameters to be defined in Postfix configuration. Default configuration ensures opendkim is set up as a milter of Postfix to sign mails. You can define additional Postfix parameters using a list union. |
 
+### Unlisted domains
+
+By default, existing signing rules and keys for domains outside `dkim_domains`
+are preserved, and legacy keys are migrated. To stop signing for those domains
+while keeping their keys, set `dkim_deactivate_unknown: true`. Domains that
+were deactivated stay deactivated on subsequent runs with
+`dkim_deactivate_unknown: false`. To restore a removed signing rule, add its
+domain to `dkim_domains` in your playbook.
+
+At the end of each run, the role lists domains from `KeyTable` that have no
+domain-specific rule in `SigningTable`. The report lists them under
+`dkim_domains` so you can append the entries you want to reactivate.
+
+Set `dkim_delete_unknown: true` to also retire the keys. Deletion covers
+generated key files and their `.txt` companions in unlisted domain directories,
+as well as legacy key pairs referenced by removed entries.
+The role removes files from its `keys` directory after OpenDKIM adopts the new
+tables. It removes empty key directories for unlisted domains and keeps keys
+still referenced by the deployed `KeyTable`. Published DNS records stay in place.
+
 ### Migrating existing keys
 
-The role reads the existing `KeyTable` before configuring OpenDKIM. For every
+The role migrates all retained legacy `KeyTable` rows, including rows for
+unlisted domains, regardless of `dkim_deactivate_unknown`. For each retained
 row pointing directly to `keys/<selector>.private`, it copies the private key
-and its `.txt` DNS record to `keys/<domain>/`, using the domain and selector
-from that row. Each domain gets its own copy of a shared legacy key. The role
-updates the `KeyTable` paths and removes the original pair after OpenDKIM
-restarts successfully. If a destination has a different private key or a
-source file is missing, the migration stops and keeps the original files.
+and its `.txt` DNS record to `keys/<domain>/`, then updates the `KeyTable` path.
+It removes the original pair after OpenDKIM restarts and the last reference to
+it is gone. If a destination has a different private key or a source file is
+missing, the migration stops and keeps the original files.
 
 
 ## Example playbook
@@ -105,7 +127,9 @@ Each job applies the role inside a systemd container built from the selected
 release tag using Docker and Ansible on an Ubuntu 24.04 runner.
 
 The test runner translates the platform codenames in `galaxy_info.platforms`
-to versioned Docker tags and runs each playbook twice to verify idempotence.
+to versioned Docker tags. It checks idempotence, migration for unlisted domains
+in both signing modes, the report after switching deactivation off, and a dry
+run before deletion.
 Run it on Linux with rootful Docker Engine 28 or later, cgroups v2, and a Python
 3.12 virtual environment. Each container has a private cgroup namespace with a
 writable cgroup mount for systemd.

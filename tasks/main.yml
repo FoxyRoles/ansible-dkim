@@ -24,8 +24,8 @@
     fail_msg: Set dkim_mta to postfix or sendmail.
     quiet: true
 
-- name: Read the existing OpenDKIM KeyTable
-  ansible.builtin.import_tasks: read_key_table.yml
+- name: Read the existing OpenDKIM tables
+  ansible.builtin.import_tasks: read_tables.yml
 
 - name: Configure OpenDKIM
   ansible.builtin.import_tasks: opendkim.yml
@@ -40,3 +40,6 @@
 
 - name: Report the public DKIM records
   ansible.builtin.import_tasks: dns_records.yml
+
+- name: Report deactivated domains
+  ansible.builtin.import_tasks: report_deactivated_domains.yml

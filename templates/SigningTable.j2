@@ -2,3 +2,11 @@
 {% for domain in dkim_domains %}
 *@{{ domain }} {{ dkim_selector }}._domainkey.{{ domain }}
 {% endfor %}
+{% if not (dkim_deactivate_unknown | bool) and not (dkim_delete_unknown | bool) %}
+{% for line in dkim_signing_table_content.splitlines() if line.split() and not line.lstrip().startswith('#') %}
+{% set domain = line.split()[0] | regex_search('(?<=@)[a-zA-Z0-9_][a-zA-Z0-9_.-]*$') | default('', true) | lower %}
+{% if domain not in dkim_listed_domains %}
+{{ line }}
+{% endif %}
+{% endfor %}
+{% endif %}
