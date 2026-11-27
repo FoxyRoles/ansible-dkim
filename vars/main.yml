@@ -1,6 +1,11 @@
 ---
 # DKIM ANsible role vars
 
+dkim_opendkim_packages:
+  - opendkim
+  - opendkim-tools
+  - openssl
+
 dkim_keys_dir: "{{ dkim_opendkim_config_dir }}/keys"
 dkim_key_dir: "{{ dkim_keys_dir }}/{{ dkim_domain }}"
 dkim_key_path: "{{ dkim_key_dir }}/{{ dkim_selector }}"
@@ -26,8 +31,8 @@ dkim_postfix_config_default:
 - parameter: milter_default_action
   value: accept
 - parameter: smtpd_milters
-  value: inet:localhost:12301
+  value: 'inet:localhost:{{ dkim_milter_port }}'
 - parameter: non_smtpd_milters
-  value: inet:localhost:12301
+  value: 'inet:localhost:{{ dkim_milter_port }}'
 
 ...

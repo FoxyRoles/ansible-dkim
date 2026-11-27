@@ -1,6 +1,12 @@
 # ansible-dkim
 
-Ansible role for configuring [OpenDKIM](http://opendkim.org/) mail signing with [Postfix](http://www.postfix.org/) or Sendmail on Debian and Ubuntu.
+Ansible role for configuring [OpenDKIM](http://opendkim.org/) mail signing with [Postfix](http://www.postfix.org/) or Sendmail.
+
+## Works on
+
+- [Debian](https://www.debian.org/)
+- Debian derivatives such as [Ubuntu](https://ubuntu.com/)
+- [Red Hat Enterprise Linux 9](https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux) and compatible distributions such as [AlmaLinux 9](https://almalinux.org/)
 
 ## Description
 
@@ -19,6 +25,12 @@ managed hosts running Python 3.8, including Ubuntu 20.04 LTS with its default
 Python. The controller needs Python 3.11–3.13 to run ansible-core 2.19.
 Ubuntu 26.04 LTS uses Python 3.14 by default and needs ansible-core 2.20 or
 later with that interpreter.
+
+On Enterprise Linux 9, the role installs the EPEL 9 release package if needed
+and uses the main OpenDKIM configuration at `/etc/opendkim.conf`. OpenDKIM
+requires dependencies from CodeReady Builder (CRB). The repository must be
+available to DNF, including through a subscription on RHEL. The role enables
+it for the OpenDKIM installation transaction. [Red Hat EPEL guide](https://www.redhat.com/en/blog/install-epel-linux)
 
 The role requires that you configure all the rest of the mail management and you will need to have access to the DNS configuration of the domains you are requesting to sign. At the end, the role will give you the DNS records with the public keys of the domains that you will have to publish in the global DNS system.
 
@@ -48,8 +60,10 @@ See also comments and default values in role's file [`defaults/main.yml`](defaul
 
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
-| `dkim_default_config_file:` | /etc/default/opendkim | Opendkim default values configuration file |
+| `dkim_default_config_file:` | `/etc/default/opendkim` | OpenDKIM package defaults file on Debian-based distributions |
 | `dkim_opendkim_config_dir:` | /etc/opendkim | Opendkim configuration directory |
+| `dkim_milter_port:` | `12301` on Debian-based distributions, `8891` on Enterprise Linux 9 | Local TCP port shared by OpenDKIM and the selected MTA |
+| `dkim_redhat_crb_repo:` | `codeready-builder-for-rhel-9-<arch>-rpms` on RHEL, `crb` on compatible distributions | DNF repository ID for OpenDKIM dependencies on Enterprise Linux 9 |
 | `dkim_user:` | opendkim | linux user that runs Opendkim |
 | `dkim_group:` | opendkim | linux group that runs Opendkim |
 

@@ -23,6 +23,7 @@ IMAGE_TAGS_BY_CODENAME = {
     'ubuntu:resolute': 'ubuntu:26.04',
     'debian:bookworm': 'debian:12',
     'debian:trixie': 'debian:13',
+    'el:9': 'almalinux:9',
 }
 
 # Focal's Python 3.8 requires Ansible 2.19. Resolute's Python 3.14 requires 2.20 or later.
@@ -139,9 +140,11 @@ def test_unknown_domains(container, command, environment):
 def test_image(image, playbook, workspace, environment):
     print(f'Testing {playbook.stem} on {image} with ansible-core {ansible_version}', flush=True)
     tag = f'sunfoxcz-dkim-test:{image.replace(":", "-")}'
+    redhat = image == IMAGE_TAGS_BY_CODENAME['el:9']
+    dockerfile = TESTS / ('Dockerfile.redhat' if redhat else 'Dockerfile')
     subprocess.run(
         ['docker', 'build', '--pull', '--build-arg', f'BASE_IMAGE={image}',
-         '--tag', tag, str(TESTS)],
+         '--file', str(dockerfile), '--tag', tag, str(TESTS)],
         check=True,
     )
 
@@ -165,6 +168,15 @@ def test_image(image, playbook, workspace, environment):
         command = [sys.executable, '-m', 'ansible.cli.playbook', '-i', str(inventory), str(playbook)]
         subprocess.run([*command, '--syntax-check'], env=environment, check=True)
         subprocess.run(command, env=environment, check=True)
+        port = 8891 if redhat else 12301
+        probe = 'import socket, sys; socket.create_connection(("127.0.0.1", int(sys.argv[1])), 5).close()'
+        subprocess.run(
+            ['docker', 'exec', container, '/usr/bin/python3', '-c', probe, str(port)],
+            check=True,
+        )
+        if redhat:
+            subprocess.run(['docker', 'exec', container, 'test', '!', '-e', '/etc/default/opendkim'], check=True)
+            subprocess.run(['docker', 'exec', container, 'systemctl', 'is-enabled', '--quiet', playbook.stem], check=True)
         verify_idempotence(command, environment)
         test_unknown_domains(container, command, environment)
     finally:
