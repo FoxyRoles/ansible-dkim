@@ -52,7 +52,7 @@ See also comments and default values in role's file [`default/main.yml`](default
 |  Variable     |   Default value   |   Description  |
 |:-------------------:|:------------------------:|:------------:|
 | `dkim_selector:` | email | DKIM Public Key DNS record's selector. The definition of a value specific to the MTA server allows to associate the same domain several DKIM Public Keys as DNS records, one for each server that manages and signs mail of the domain.  |
-| `dkim_admin_email:` | none | e-mail address that manages Opendkim. You must define either `dkim_admin_email` or legacy `admin_email`. |
+| `dkim_admin_email:` | none | Required OpenDKIM administrator email address. |
 | `dkim_trustedhosts:` | `['127.0.0.1','localhost']` | List of trusted hosts for opendkim |
 | `dkim_domains:` | none | List of domains that Opendkim must be configured to sign the mails of. A yaml list of DNS. |
 | `dkim_rsa_keylen:` | 2048 | RSA keylength when generating keys with `opendkim-keygen`. Other currently possible options are 1024 or 4096.  |
@@ -82,7 +82,6 @@ source file is missing, the migration stops and keeps the original files.
 - hosts: myserver
   roles:
     - role: sunfoxcz.dkim
-      # if admin_email variable is present, will be used as default for dkim_admin_email
       dkim_admin_email: my@mail.tld
       dkim_selector: mail
       dkim_domains:

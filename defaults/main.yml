@@ -15,11 +15,8 @@ dkim_managed_comment: "{{ ansible_managed | default('Ansible managed') }}"
 ## The "selector" for opendkim keys and DNS records generation
 dkim_selector: email
 
-## The e-mail address that manages opendkim
-dkim_admin_email: "{{ admin_email | default ( omit ) }}"
-# This variable, in the role's namespace `dkim_`, is defined with the value of `admin_email` for backward
-# compatibility of the role, and eventually to harmonise this value accross a whole set of roles.
-# In your playbooks, you MUST set either `dkim_admin_email` or `admin_email`
+## The e-mail address that manages OpenDKIM (required)
+# dkim_admin_email: postmaster@example.test
 
 ## The list of domains you want opendkim to sign mails for MUST be defined as a list:
 # dkim_domains:

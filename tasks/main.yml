@@ -1,9 +1,14 @@
 ---
 ## Tasks for Opendkim Ansible role
 
-- fail:
-    msg: "bailing out, this role requires either 'dkim_admin_email' or `admin_email` to have an email address as value"
-  when: dkim_admin_email is not defined
+- name: Validate the DKIM administrator address
+  ansible.builtin.assert:
+    that:
+      - dkim_admin_email is defined
+      - dkim_admin_email is string
+      - dkim_admin_email | trim | length > 0
+    fail_msg: Set dkim_admin_email to the administrator email address.
+    quiet: true
 
 - fail:
     msg: "bailing out, this role requires 'dkim_domains' to be defined as a list of domains."
