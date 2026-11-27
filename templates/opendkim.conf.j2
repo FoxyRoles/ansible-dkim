@@ -20,6 +20,6 @@ SignatureAlgorithm      rsa-sha256
 
 UserID                  {{ dkim_user }}:{{ dkim_group }}
 
-Socket                  inet:12301@localhost
+Socket                  inet:{{ dkim_milter_port }}@localhost
 
 {{ dkim_conf_override | default('') }}

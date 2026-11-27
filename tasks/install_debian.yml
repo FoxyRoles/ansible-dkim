@@ -1,0 +1,12 @@
+---
+- name: Install OpenDKIM packages
+  ansible.builtin.package:
+    name: '{{ dkim_opendkim_packages }}'
+    state: present
+
+- name: Set the socket in the Debian OpenDKIM defaults file
+  ansible.builtin.lineinfile:
+    path: '{{ dkim_default_config_file }}'
+    regexp: '^SOCKET='
+    line: 'SOCKET="inet:{{ dkim_milter_port }}@localhost"'
+  notify: '{{ dkim_config_notify }}'

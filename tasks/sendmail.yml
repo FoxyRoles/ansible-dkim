@@ -12,8 +12,14 @@
   ansible.builtin.lineinfile:
     path: '{{ dkim_sendmail_config_file }}'
     regexp: '^INPUT_MAIL_FILTER\(\`opendkim'
-    line: "INPUT_MAIL_FILTER(`opendkim', `S=inet:12301@127.0.0.1')dnl"
+    line: "INPUT_MAIL_FILTER(`opendkim', `S=inet:{{ dkim_milter_port }}@127.0.0.1')dnl"
     backup: true
   notify: opendkim - refresh sendmail
   tags: sendmail
 
+- name: Enable Sendmail at boot on Enterprise Linux
+  ansible.builtin.systemd_service:
+    name: sendmail
+    enabled: true
+  when: ansible_facts.os_family == 'RedHat'
+  tags: sendmail

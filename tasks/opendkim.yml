@@ -1,21 +1,4 @@
 ---
-## Opendkin configuration tasks
-
-- name: opendkim packages are installed
-  ansible.builtin.package:
-    name:
-      - opendkim
-      - opendkim-tools
-      - openssl
-    state: present
-
-- name: opendkim socket configured
-  ansible.builtin.lineinfile:
-    path: '{{ dkim_default_config_file }}'
-    regexp: '^SOCKET='
-    line: 'SOCKET="inet:12301@localhost"'
-  notify: '{{ dkim_config_notify }}'
-
 - name: opendkim directory present
   ansible.builtin.file:
     path: '{{ dkim_keys_dir }}'

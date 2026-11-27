@@ -37,6 +37,8 @@ jobs:
             ansible_core: '2.19'
           - image: debian:13
             ansible_core: '2.21'
+          - image: almalinux:9
+            ansible_core: '2.21'
         mta: [postfix, sendmail]
     env:
       DKIM_TEST_CORE: ${{ matrix.target.ansible_core }}

@@ -1,0 +1,11 @@
+# check=skip=InvalidDefaultArgInFrom
+
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ENV container=docker
+
+RUN dnf -y install python3 python3-dnf systemd \
+    && dnf clean all
+
+CMD ["/sbin/init"]

@@ -1,11 +1,16 @@
 ---
 ## Default Variables for ansible-dkim role
 
-### Opendkim debian/ubuntu package configuration
+### OpenDKIM package configuration
 
+# Debian-based distributions only
 dkim_default_config_file: /etc/default/opendkim
 
 dkim_opendkim_config_dir: /etc/opendkim
+dkim_milter_port: "{{ 8891 if ansible_facts.get('os_family') == 'RedHat' else 12301 }}"
+dkim_redhat_crb_repo: >-
+  {{ 'codeready-builder-for-rhel-9-' ~ ansible_facts.architecture ~ '-rpms'
+     if ansible_facts.distribution == 'RedHat' else 'crb' }}
 
 dkim_user: opendkim
 dkim_group: opendkim

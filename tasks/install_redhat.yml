@@ -1,0 +1,39 @@
+---
+- name: Check if EPEL is installed
+  ansible.builtin.command:
+    argv:
+      - rpm
+      - -q
+      - epel-release
+  register: dkim_epel_release
+  check_mode: false
+  changed_when: false
+  failed_when: dkim_epel_release.rc not in [0, 1]
+
+- name: Configure EPEL 9
+  when: dkim_epel_release.rc == 1
+  block:
+    - name: Import the EPEL 9 signing key
+      ansible.builtin.rpm_key:
+        key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
+        fingerprint: FF8AD1344597106ECE813B918A3872BF3228467C
+        state: present
+
+    - name: Install the EPEL 9 release package
+      ansible.builtin.dnf:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        state: present
+
+- name: Install OpenDKIM packages from EPEL
+  ansible.builtin.dnf:
+    name: '{{ dkim_opendkim_packages }}'
+    enablerepo: '{{ dkim_redhat_crb_repo }}'
+    state: present
+
+- name: Install the tools for rebuilding Sendmail configuration
+  ansible.builtin.dnf:
+    name:
+      - sendmail-cf
+      - make
+    state: present
+  when: dkim_mta == 'sendmail'

@@ -24,8 +24,35 @@
     fail_msg: Set dkim_mta to postfix or sendmail.
     quiet: true
 
+- name: Gather platform facts when they are missing
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - distribution
+      - architecture
+  when: >-
+    ansible_facts.distribution is not defined or ansible_facts.os_family is not defined or
+    ansible_facts.distribution_major_version is not defined or ansible_facts.architecture is not defined
+
+- name: Validate the target platform
+  ansible.builtin.assert:
+    that: >-
+      ansible_facts.os_family == 'Debian' or
+      (ansible_facts.os_family == 'RedHat' and ansible_facts.distribution_major_version == '9')
+    fail_msg: This role supports Debian-based distributions and Enterprise Linux 9.
+    quiet: true
+
 - name: Read the existing OpenDKIM tables
   ansible.builtin.import_tasks: read_tables.yml
+
+- name: Install OpenDKIM on Debian-based distributions
+  ansible.builtin.import_tasks: install_debian.yml
+  when: ansible_facts.os_family == 'Debian'
+
+- name: Install OpenDKIM on Enterprise Linux 9
+  ansible.builtin.import_tasks: install_redhat.yml
+  when: ansible_facts.os_family == 'RedHat'
 
 - name: Configure OpenDKIM
   ansible.builtin.import_tasks: opendkim.yml
